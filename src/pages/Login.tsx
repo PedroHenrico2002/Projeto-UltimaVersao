@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,19 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [hasRegisteredUsers, setHasRegisteredUsers] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if there are any registered users in localStorage
+    const registeredUsers = localStorage.getItem('registeredUsers');
+    if (registeredUsers) {
+      setHasRegisteredUsers(true);
+    } else {
+      // If no registered users, force to registration view
+      setIsLogin(false);
+    }
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,30 +37,52 @@ const Login: React.FC = () => {
         return;
       }
       
-      // Mock login successful - in real app this would validate against backend
-      const mockUser = {
-        name: email.split('@')[0], // Use part of email as name for mock
-        email,
-      };
-      
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      toast.success('Login realizado com sucesso!');
-      navigate('/');
+      // Check if user exists in registered users
+      const registeredUsers = localStorage.getItem('registeredUsers');
+      if (registeredUsers) {
+        const users = JSON.parse(registeredUsers);
+        const user = users.find((u: any) => u.email === email);
+        
+        if (user) {
+          // In a real app, we would validate password here
+          localStorage.setItem('user', JSON.stringify(user));
+          toast.success('Login realizado com sucesso!');
+          navigate('/');
+        } else {
+          toast.error('Usuário não encontrado. Por favor, cadastre-se primeiro.');
+          setIsLogin(false);
+        }
+      } else {
+        toast.error('Não há usuários cadastrados. Por favor, cadastre-se primeiro.');
+        setIsLogin(false);
+      }
     } else {
+      // Registration
       // Simple validation
       if (!name || !email || !password) {
         toast.error('Por favor, preencha todos os campos');
         return;
       }
       
-      // Mock registration successful - in real app this would create account in backend
+      // Create new user
       const newUser = {
         name,
         email,
       };
       
+      // Save to registered users
+      const registeredUsers = localStorage.getItem('registeredUsers');
+      let users = [];
+      if (registeredUsers) {
+        users = JSON.parse(registeredUsers);
+      }
+      users.push(newUser);
+      localStorage.setItem('registeredUsers', JSON.stringify(users));
+      
+      // Also log the user in
       localStorage.setItem('user', JSON.stringify(newUser));
-      toast.success('Cadastro realizado com sucesso!');
+      
+      toast.success('Cadastro realizado com sucesso! Você está conectado.');
       navigate('/');
     }
   };
@@ -145,18 +179,20 @@ const Login: React.FC = () => {
                   </div>
                 </form>
                 
-                <div className="mt-6 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    {isLogin ? "Não tem uma conta?" : "Já tem uma conta?"}
-                    <button
-                      type="button"
-                      className="ml-1 text-accent hover:text-accent/80 transition-colors font-medium"
-                      onClick={() => setIsLogin(!isLogin)}
-                    >
-                      {isLogin ? 'Cadastre-se' : 'Entrar'}
-                    </button>
-                  </p>
-                </div>
+                {hasRegisteredUsers && (
+                  <div className="mt-6 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      {isLogin ? "Não tem uma conta?" : "Já tem uma conta?"}
+                      <button
+                        type="button"
+                        className="ml-1 text-accent hover:text-accent/80 transition-colors font-medium"
+                        onClick={() => setIsLogin(!isLogin)}
+                      >
+                        {isLogin ? 'Cadastre-se' : 'Entrar'}
+                      </button>
+                    </p>
+                  </div>
+                )}
               </div>
               
               <div className="p-6 bg-muted/30 border-t border-border">
