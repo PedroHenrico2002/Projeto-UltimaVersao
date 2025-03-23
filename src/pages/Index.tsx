@@ -1,9 +1,7 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { Link } from 'react-router-dom';
-import { FoodCard } from '@/components/FoodCard';
-import { RestaurantCard } from '@/components/RestaurantCard';
 
 // Categorias
 const categories = [
@@ -29,14 +27,55 @@ const categories = [
         </svg>
       </div>
     ),
-    link: '/desserts'
+    link: '/restaurants'
   }
+];
+
+// Restaurantes principais
+const mainRestaurants = [
+  {
+    id: '1',
+    name: 'Restaurante Italiano',
+    image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    cuisine: 'Italiana',
+    rating: 4.8,
+    deliveryTime: '25-40 min',
+    minOrder: 'R$15,90',
+    featured: true,
+  },
+  {
+    id: '2',
+    name: 'Restaurante Japonês',
+    image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    cuisine: 'Japonesa',
+    rating: 4.9,
+    deliveryTime: '30-45 min',
+    minOrder: 'R$25,00',
+  },
+  {
+    id: '3',
+    name: 'Churrascaria Gaúcha',
+    image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    cuisine: 'Churrasco',
+    rating: 4.7,
+    deliveryTime: '35-50 min',
+    minOrder: 'R$30,00',
+  },
+  {
+    id: '4',
+    name: 'Comida Caseira',
+    image: 'https://images.unsplash.com/photo-1547928576-f8d1c7a1b709?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    cuisine: 'Brasileira',
+    rating: 4.5,
+    deliveryTime: '20-35 min',
+    minOrder: 'R$12,90',
+  },
 ];
 
 // Restaurantes de sobremesa
 const dessertRestaurants = [
   {
-    id: '1',
+    id: '5',
     name: 'Doce Paixão',
     image: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
     cuisine: 'Doces e Bolos',
@@ -46,7 +85,7 @@ const dessertRestaurants = [
     featured: true,
   },
   {
-    id: '2',
+    id: '6',
     name: 'Gelato Italiano',
     image: 'https://images.unsplash.com/photo-1501443762994-82bd5dace89a?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
     cuisine: 'Sorvetes e Gelatos',
@@ -55,7 +94,7 @@ const dessertRestaurants = [
     minOrder: 'R$6,50',
   },
   {
-    id: '3',
+    id: '7',
     name: 'Confeitaria Doce Sonho',
     image: 'https://images.unsplash.com/photo-1574085733277-851d9d856a3a?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
     cuisine: 'Doces e Confeitaria',
@@ -64,7 +103,7 @@ const dessertRestaurants = [
     minOrder: 'R$7,50',
   },
   {
-    id: '4',
+    id: '8',
     name: 'Açaí Tropical',
     image: 'https://images.unsplash.com/photo-1502825751399-28baa9b81995?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
     cuisine: 'Açaí e Smoothies',
@@ -75,10 +114,29 @@ const dessertRestaurants = [
 ];
 
 const Index: React.FC = () => {
+  const [userName, setUserName] = useState('');
+  
+  useEffect(() => {
+    // Check if user is logged in from localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      setUserName(user.name);
+    }
+  }, []);
+
   return (
     <Layout>
       <div className="pt-20 pb-16">
         <div className="page-container">
+          {/* Welcome Message */}
+          {userName && (
+            <div className="mb-6 p-4 bg-green-50 rounded-lg">
+              <h2 className="text-lg font-medium text-green-800">Bem-vindo, {userName}!</h2>
+              <p className="text-sm text-green-600">O que você deseja pedir hoje?</p>
+            </div>
+          )}
+          
           {/* Categories */}
           <div className="grid grid-cols-2 gap-4 sm:gap-6 mb-8">
             {categories.map((category) => (
@@ -93,14 +151,19 @@ const Index: React.FC = () => {
             ))}
           </div>
           
-          {/* Sobremesa Section */}
-          <section>
-            <h2 className="text-xl font-bold mb-6">Sobremesa</h2>
+          {/* Restaurants Section */}
+          <section className="mb-10">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold">Restaurantes</h2>
+              <Link to="/restaurants" className="text-sm text-red-600">
+                Ver todos
+              </Link>
+            </div>
             
             <div className="grid grid-cols-1 gap-4">
-              {dessertRestaurants.map((restaurant) => (
+              {mainRestaurants.slice(0, 2).map((restaurant) => (
                 <Link key={restaurant.id} to={`/restaurants/${restaurant.id}`} className="block">
-                  <div className="flex items-center border rounded-lg overflow-hidden bg-white">
+                  <div className="flex items-center border rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow">
                     <div className="w-20 h-20 bg-gray-200">
                       <img 
                         src={restaurant.image} 
@@ -110,6 +173,45 @@ const Index: React.FC = () => {
                     </div>
                     <div className="flex-1 p-3">
                       <h3 className="font-medium">{restaurant.name}</h3>
+                      <p className="text-xs text-gray-500">{restaurant.cuisine}</p>
+                      <div className="flex items-center text-yellow-500 text-sm">
+                        <span className="mr-1">★</span>
+                        <span>{restaurant.rating}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-500 mt-1">
+                        <span>{restaurant.deliveryTime}</span>
+                        <span>{restaurant.minOrder}</span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+          
+          {/* Sobremesa Section */}
+          <section>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold">Sobremesa</h2>
+              <Link to="/restaurants" className="text-sm text-red-600">
+                Ver todas
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-4">
+              {dessertRestaurants.slice(0, 2).map((restaurant) => (
+                <Link key={restaurant.id} to={`/restaurants/${restaurant.id}`} className="block">
+                  <div className="flex items-center border rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow">
+                    <div className="w-20 h-20 bg-gray-200">
+                      <img 
+                        src={restaurant.image} 
+                        alt={restaurant.name} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 p-3">
+                      <h3 className="font-medium">{restaurant.name}</h3>
+                      <p className="text-xs text-gray-500">{restaurant.cuisine}</p>
                       <div className="flex items-center text-yellow-500 text-sm">
                         <span className="mr-1">★</span>
                         <span>{restaurant.rating}</span>

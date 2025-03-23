@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { Link, useNavigate } from 'react-router-dom';
@@ -20,23 +21,35 @@ const Login: React.FC = () => {
     if (isLogin) {
       // Simple validation
       if (!email || !password) {
-        toast.error('Please fill all fields');
+        toast.error('Por favor, preencha todos os campos');
         return;
       }
       
-      // Mock login successful
-      toast.success('Login successful!');
+      // Mock login successful - in real app this would validate against backend
+      const mockUser = {
+        name: email.split('@')[0], // Use part of email as name for mock
+        email,
+      };
+      
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      toast.success('Login realizado com sucesso!');
       navigate('/');
     } else {
       // Simple validation
       if (!name || !email || !password) {
-        toast.error('Please fill all fields');
+        toast.error('Por favor, preencha todos os campos');
         return;
       }
       
-      // Mock registration successful
-      toast.success('Registration successful! Please log in');
-      setIsLogin(true);
+      // Mock registration successful - in real app this would create account in backend
+      const newUser = {
+        name,
+        email,
+      };
+      
+      localStorage.setItem('user', JSON.stringify(newUser));
+      toast.success('Cadastro realizado com sucesso!');
+      navigate('/');
     }
   };
 
@@ -49,11 +62,11 @@ const Login: React.FC = () => {
             <div className="bg-card rounded-2xl border border-border shadow-lg overflow-hidden animate-scale-in">
               <div className="p-8">
                 <div className="text-center mb-8">
-                  <h1 className="heading-md mb-2">{isLogin ? 'Welcome back' : 'Create an account'}</h1>
+                  <h1 className="heading-md mb-2">{isLogin ? 'Bem-vindo de volta' : 'Crie sua conta'}</h1>
                   <p className="text-muted-foreground">
                     {isLogin 
-                      ? 'Enter your credentials to access your account' 
-                      : 'Fill in your details to get started'}
+                      ? 'Digite suas credenciais para acessar sua conta' 
+                      : 'Preencha seus dados para começar'}
                   </p>
                 </div>
                 
@@ -61,7 +74,7 @@ const Login: React.FC = () => {
                   <div className="space-y-4">
                     {!isLogin && (
                       <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
+                        <Label htmlFor="name">Nome Completo</Label>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-muted-foreground">
                             <User size={18} />
@@ -69,7 +82,7 @@ const Login: React.FC = () => {
                           <Input 
                             id="name"
                             type="text"
-                            placeholder="John Doe"
+                            placeholder="João da Silva"
                             className="pl-10"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
@@ -87,7 +100,7 @@ const Login: React.FC = () => {
                         <Input 
                           id="email"
                           type="email"
-                          placeholder="name@example.com"
+                          placeholder="nome@exemplo.com"
                           className="pl-10"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
@@ -97,13 +110,13 @@ const Login: React.FC = () => {
                     
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
-                        <Label htmlFor="password">Password</Label>
+                        <Label htmlFor="password">Senha</Label>
                         {isLogin && (
                           <Link
                             to="/forgot-password"
                             className="text-sm text-accent hover:text-accent/80 transition-colors"
                           >
-                            Forgot password?
+                            Esqueceu a senha?
                           </Link>
                         )}
                       </div>
@@ -126,7 +139,7 @@ const Login: React.FC = () => {
                       type="submit"
                       className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
                     >
-                      {isLogin ? 'Sign In' : 'Create Account'}
+                      {isLogin ? 'Entrar' : 'Criar Conta'}
                       <ArrowRight size={16} className="ml-2" />
                     </Button>
                   </div>
@@ -134,13 +147,13 @@ const Login: React.FC = () => {
                 
                 <div className="mt-6 text-center">
                   <p className="text-sm text-muted-foreground">
-                    {isLogin ? "Don't have an account?" : "Already have an account?"}
+                    {isLogin ? "Não tem uma conta?" : "Já tem uma conta?"}
                     <button
                       type="button"
                       className="ml-1 text-accent hover:text-accent/80 transition-colors font-medium"
                       onClick={() => setIsLogin(!isLogin)}
                     >
-                      {isLogin ? 'Sign Up' : 'Sign In'}
+                      {isLogin ? 'Cadastre-se' : 'Entrar'}
                     </button>
                   </p>
                 </div>
@@ -149,13 +162,13 @@ const Login: React.FC = () => {
               <div className="p-6 bg-muted/30 border-t border-border">
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">
-                    By continuing, you agree to our{' '}
+                    Ao continuar, você concorda com nossos{' '}
                     <Link to="/terms" className="text-foreground/80 hover:text-foreground underline">
-                      Terms of Service
+                      Termos de Serviço
                     </Link>{' '}
-                    and{' '}
+                    e{' '}
                     <Link to="/privacy" className="text-foreground/80 hover:text-foreground underline">
-                      Privacy Policy
+                      Política de Privacidade
                     </Link>
                   </p>
                 </div>

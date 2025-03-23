@@ -1,10 +1,30 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { MapPin } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { MapPin, User } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const [address, setAddress] = useState('Rua Augusta, 1500');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState('');
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Check if user is logged in from localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      setIsLoggedIn(true);
+      setUserName(user.name);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setIsLoggedIn(false);
+    setUserName('');
+    navigate('/');
+  };
   
   return (
     <header className="fixed top-0 left-0 right-0 bg-white z-50 border-b border-gray-100">
@@ -22,15 +42,34 @@ export const Navbar: React.FC = () => {
           </div>
           
           {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <h1 className="text-xl font-bold text-red-600">Be Legendary</h1>
-          </Link>
+          <div className="flex items-center space-x-4">
+            <Link to="/" className="flex items-center">
+              <h1 className="text-xl font-bold text-red-600">Be Legendary</h1>
+            </Link>
+            
+            <Link to="/restaurants" className="text-sm text-gray-700 hover:text-red-600">
+              Restaurantes
+            </Link>
+          </div>
           
           {/* Auth */}
           <div className="flex items-center">
-            <Link to="/login" className="text-sm text-red-600 hover:text-red-700">
-              Entrar / Cadastrar
-            </Link>
+            {isLoggedIn ? (
+              <div className="flex items-center space-x-2">
+                <User size={18} className="text-red-600" />
+                <span className="text-sm text-gray-800">{userName}</span>
+                <button 
+                  onClick={handleLogout}
+                  className="text-sm text-red-600 hover:text-red-700 ml-2"
+                >
+                  Sair
+                </button>
+              </div>
+            ) : (
+              <Link to="/login" className="text-sm text-red-600 hover:text-red-700">
+                Entrar / Cadastrar
+              </Link>
+            )}
           </div>
         </div>
       </div>
