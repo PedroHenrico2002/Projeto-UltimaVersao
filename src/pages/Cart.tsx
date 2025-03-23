@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { LocationSelector } from '@/components/LocationSelector';
@@ -6,7 +5,7 @@ import { OrderSummary } from '@/components/OrderSummary';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ChevronRight, Minus, Plus, Trash2 } from 'lucide-react';
-import { toast } from '@/components/ui/sonner';
+import { toast } from '@/lib/toast';
 
 // Mock data
 const cartItems = [

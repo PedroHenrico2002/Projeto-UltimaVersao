@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Layout } from '@/components/Layout';
 import { Hero } from '@/components/Hero';
@@ -7,7 +6,7 @@ import { FoodCard } from '@/components/FoodCard';
 import { ArrowRight, Clock, Leaf, ThumbsUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/components/ui/sonner';
+import { toast } from '@/lib/toast';
 
 // Mock data
 const featuredRestaurants = [

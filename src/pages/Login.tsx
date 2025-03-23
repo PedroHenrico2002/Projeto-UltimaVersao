@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { Link, useNavigate } from 'react-router-dom';
@@ -6,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Mail, Lock, User, ArrowRight } from 'lucide-react';
-import { toast } from '@/components/ui/sonner';
+import { toast } from '@/lib/toast';
 
 const Login: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);

@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Minus, Plus, ShoppingCart, Star, Clock, Store, ChevronLeft } from 'lucide-react';
-import { toast } from '@/components/ui/sonner';
+import { toast } from '@/lib/toast';
 
 // Mock data
 const foodDetails = {

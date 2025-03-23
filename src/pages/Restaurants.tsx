@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { RestaurantCard } from '@/components/RestaurantCard';
 import { LocationSelector } from '@/components/LocationSelector';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, Filter, Search, SlidersHorizontal } from 'lucide-react';
-import { toast } from '@/components/ui/sonner';
+import { toast } from '@/lib/toast';
 
 // Mock data
 const restaurants = [

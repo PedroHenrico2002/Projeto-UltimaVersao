@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { OrderSummary } from '@/components/OrderSummary';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Calendar, Check, ChevronLeft, CreditCard, MapPin, Shield } from 'lucide-react';
-import { toast } from '@/components/ui/sonner';
+import { toast } from '@/lib/toast';
 
 // Mock data
 const deliveryAddress = '350 Fifth Avenue, New York, NY 10118';
