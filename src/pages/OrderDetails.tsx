@@ -4,8 +4,9 @@ import { Layout } from '@/components/Layout';
 import { OrderTracker } from '@/components/OrderTracker';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, Phone } from 'lucide-react';
+import { ArrowLeft, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 interface OrderItem {
   id: string;
@@ -50,7 +51,7 @@ const OrderDetails: React.FC = () => {
     }
   }, [navigate]);
   
-  // Simular progresso do pedido ao longo do tempo
+  // Simular progresso do pedido ao longo do tempo - Acelerado para 2x mais rápido
   useEffect(() => {
     if (!orderDetails) return;
     
@@ -58,18 +59,18 @@ const OrderDetails: React.FC = () => {
       setElapsedTime(prev => {
         const newTime = prev + 1;
         
-        // Atualizar status com base no tempo decorrido
-        if (newTime === 10) {
+        // Atualizar status com base no tempo decorrido (agora 2x mais rápido)
+        if (newTime === 5) { // Era 10
           setStatus('ready');
           // Atualizar no sessionStorage
           const updatedOrder = { ...orderDetails, status: 'ready' };
           sessionStorage.setItem('orderDetails', JSON.stringify(updatedOrder));
-        } else if (newTime === 20) {
+        } else if (newTime === 10) { // Era 20
           setStatus('delivering');
           // Atualizar no sessionStorage
           const updatedOrder = { ...orderDetails, status: 'delivering' };
           sessionStorage.setItem('orderDetails', JSON.stringify(updatedOrder));
-        } else if (newTime === 35) {
+        } else if (newTime === 17) { // Era 35
           setStatus('delivered');
           // Atualizar no sessionStorage
           const updatedOrder = { ...orderDetails, status: 'delivered' };
@@ -79,10 +80,24 @@ const OrderDetails: React.FC = () => {
         
         return newTime;
       });
-    }, 2000); // A cada 2 segundos para simulação
+    }, 1000); // Acelerado para 2x mais rápido (antes era 2000)
 
     return () => clearInterval(interval);
   }, [orderDetails]);
+  
+  const handleRating = (rating: number) => {
+    toast.success(`Obrigado por avaliar o restaurante com ${rating} estrelas!`);
+    
+    // Salvar avaliação no storage
+    if (orderDetails) {
+      const updatedOrder = { 
+        ...orderDetails, 
+        rating,
+        status: 'delivered'
+      };
+      sessionStorage.setItem('orderDetails', JSON.stringify(updatedOrder));
+    }
+  };
   
   if (!orderDetails) {
     return (
@@ -107,9 +122,6 @@ const OrderDetails: React.FC = () => {
               </Link>
               <h1 className="text-xl font-bold">ACOMPANHE SEU PEDIDO</h1>
             </div>
-            <Button variant="destructive" className="bg-red-600">
-              Contatar vendedor
-            </Button>
           </div>
           
           <div className="mb-8">
@@ -117,6 +129,7 @@ const OrderDetails: React.FC = () => {
               status={status} 
               estimatedDelivery={orderDetails.estimatedDelivery}
               simplified={true}
+              onRate={handleRating}
             />
           </div>
           
@@ -164,13 +177,6 @@ const OrderDetails: React.FC = () => {
                   <span>Total</span>
                   <span>R${orderDetails.totalValue.toFixed(2).replace('.', ',')}</span>
                 </div>
-              </div>
-              
-              <div className="mt-6">
-                <Button className="w-full bg-red-600 hover:bg-red-700" variant="destructive">
-                  <Phone size={16} className="mr-2" />
-                  <span>Contatar o restaurante</span>
-                </Button>
               </div>
             </CardContent>
           </Card>

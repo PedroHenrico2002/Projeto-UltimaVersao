@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { CheckCircle2, Clock, MapPin, Truck } from 'lucide-react';
+import { CheckCircle2, Clock, MapPin, Truck, Bike, Star, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
 
 type OrderStatus = 'preparing' | 'ready' | 'delivering' | 'delivered';
 
@@ -10,6 +11,7 @@ interface OrderTrackerProps {
   estimatedDelivery: string;
   className?: string;
   simplified?: boolean;
+  onRate?: (rating: number) => void;
 }
 
 export const OrderTracker: React.FC<OrderTrackerProps> = ({
@@ -17,6 +19,7 @@ export const OrderTracker: React.FC<OrderTrackerProps> = ({
   estimatedDelivery,
   className,
   simplified = false,
+  onRate
 }) => {
   const steps = [
     { key: 'preparing', label: 'Preparando', icon: Clock },
@@ -34,6 +37,16 @@ export const OrderTracker: React.FC<OrderTrackerProps> = ({
     return 'upcoming';
   };
 
+  const getProgressPercentage = () => {
+    switch (status) {
+      case 'preparing': return 25;
+      case 'ready': return 50;
+      case 'delivering': return 75;
+      case 'delivered': return 100;
+      default: return 0;
+    }
+  };
+
   if (simplified) {
     return (
       <div className={cn("w-full", className)}>
@@ -44,16 +57,33 @@ export const OrderTracker: React.FC<OrderTrackerProps> = ({
           <h3 className="text-base font-semibold">{estimatedDelivery}</h3>
         </div>
         
-        <div className="w-full bg-green-100 h-2 rounded-full mb-4">
-          <div 
-            className="bg-green-500 h-2 rounded-full"
-            style={{ width: status === 'preparing' ? '25%' : status === 'ready' ? '50%' : status === 'delivering' ? '75%' : '100%' }}
-          ></div>
+        <div className="relative w-full h-10 mb-4">
+          <Progress 
+            value={getProgressPercentage()} 
+            className="h-2 bg-green-100" 
+          />
+          
+          {status === 'delivering' && (
+            <div 
+              className="absolute top-0 left-0 transition-all duration-500 animate-bounce"
+              style={{ left: `${Math.min(70, getProgressPercentage())}%`, transform: 'translateY(-50%)' }}
+            >
+              <Bike className="text-green-600" size={24} />
+            </div>
+          )}
+          
+          {status === 'delivered' && (
+            <div 
+              className="absolute top-0 right-0 transform -translate-y-1/2"
+            >
+              <CheckCircle2 className="text-green-600" size={24} />
+            </div>
+          )}
         </div>
         
         <div className="flex items-start gap-3">
           <div className="bg-green-500 text-white rounded-full p-1">
-            <CheckCircle2 size={18} />
+            {status === 'delivering' ? <Bike size={18} /> : <CheckCircle2 size={18} />}
           </div>
           <div>
             <p className="text-sm font-medium">
@@ -62,6 +92,30 @@ export const OrderTracker: React.FC<OrderTrackerProps> = ({
               {status === 'delivering' && 'Seu pedido está a caminho'}
               {status === 'delivered' && 'Seu pedido foi entregue'}
             </p>
+            
+            {status === 'delivered' && onRate && (
+              <div className="mt-4">
+                <p className="text-sm font-medium mb-2">Avaliar restaurante:</p>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => onRate(star)}
+                      className="text-gray-300 hover:text-yellow-400 transition-colors"
+                    >
+                      <Star size={24} className="cursor-pointer" />
+                    </button>
+                  ))}
+                </div>
+                <Button 
+                  variant="link" 
+                  className="text-red-600 p-0 h-auto mt-2" 
+                  asChild
+                >
+                  <Link to="/">Voltar para o início</Link>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -136,3 +190,4 @@ export const OrderTracker: React.FC<OrderTrackerProps> = ({
     </div>
   );
 };
+
