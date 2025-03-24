@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Search, Filter, ArrowDownAZ, Star, TrendingUp } from 'lucide-react';
+import { Search, ArrowDownAZ, Star, TrendingUp } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { 
   DropdownMenu, 
@@ -128,7 +128,6 @@ const Restaurants: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('Todos');
-  const [showFilters, setShowFilters] = useState(false);
   const [sortOption, setSortOption] = useState<'name' | 'rating' | 'orderCount'>('name');
   const [displayedRestaurants, setDisplayedRestaurants] = useState(allRestaurants);
   
@@ -142,15 +141,12 @@ const Restaurants: React.FC = () => {
       filteredByCategory = allRestaurants.filter(r => r.category === categoryParam);
     }
     
-    // Then apply search and cuisine filter
+    // Then apply search filter
     const filtered = filteredByCategory.filter((restaurant) => {
       const matchesSearch = restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           restaurant.cuisine.toLowerCase().includes(searchQuery.toLowerCase());
       
-      const matchesFilter = activeFilter === 'Todos' || 
-                          restaurant.cuisine.toLowerCase().includes(activeFilter.toLowerCase());
-      
-      return matchesSearch && matchesFilter;
+      return matchesSearch;
     });
     
     // Apply sorting
@@ -188,37 +184,27 @@ const Restaurants: React.FC = () => {
             </div>
             
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full"
-                >
-                  <Filter size={16} className="mr-1" />
-                  Filtros
-                </button>
-                
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="flex items-center text-sm">
-                      Ordenar
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => setSortOption('name')} className="flex items-center">
-                      <ArrowDownAZ size={16} className="mr-2" />
-                      <span>A-Z</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortOption('rating')} className="flex items-center">
-                      <Star size={16} className="mr-2" />
-                      <span>Avaliação</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortOption('orderCount')} className="flex items-center">
-                      <TrendingUp size={16} className="mr-2" />
-                      <span>Mais pedidos</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex items-center text-sm">
+                    Ordenar
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => setSortOption('name')} className="flex items-center">
+                    <ArrowDownAZ size={16} className="mr-2" />
+                    <span>A-Z</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortOption('rating')} className="flex items-center">
+                    <Star size={16} className="mr-2" />
+                    <span>Avaliação</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortOption('orderCount')} className="flex items-center">
+                    <TrendingUp size={16} className="mr-2" />
+                    <span>Mais pedidos</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               
               {/* Category Filters */}
               {categoryParam !== 'desserts' && categoryParam !== 'restaurants' && (
@@ -242,24 +228,6 @@ const Restaurants: React.FC = () => {
                 </div>
               )}
             </div>
-            
-            {showFilters && (
-              <div className="flex overflow-x-auto space-x-2 pb-2">
-                {cuisineFilters.map((filter) => (
-                  <button
-                    key={filter}
-                    onClick={() => setActiveFilter(filter)}
-                    className={`text-sm px-3 py-1 rounded-full whitespace-nowrap ${
-                      activeFilter === filter
-                        ? 'bg-red-600 text-white'
-                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                    }`}
-                  >
-                    {filter}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
           
           {/* Restaurant/Dessert Section */}

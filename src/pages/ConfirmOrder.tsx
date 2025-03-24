@@ -1,10 +1,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Check, ChevronLeft, ShoppingBag } from 'lucide-react';
+import { Check, ChevronLeft, CreditCard, Truck, DollarSign } from 'lucide-react';
 import { toast } from '@/lib/toast';
+import { PaymentMethod, CardDetails } from '@/components/PaymentMethods';
 
 interface OrderItem {
   id: string;
@@ -16,13 +17,17 @@ interface OrderItem {
 
 interface Order {
   restaurantName: string;
+  restaurantId: string;
   items: OrderItem[];
   totalValue: number;
   orderNumber: string;
+  paymentMethod: PaymentMethod;
+  paymentDetails: CardDetails | null;
 }
 
 const ConfirmOrder: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [order, setOrder] = useState<Order | null>(null);
   
   useEffect(() => {
@@ -71,6 +76,35 @@ const ConfirmOrder: React.FC = () => {
     }
   };
   
+  const getPaymentMethodIcon = (method: PaymentMethod) => {
+    switch (method) {
+      case 'credit':
+      case 'debit':
+        return <CreditCard className="h-5 w-5" />;
+      case 'meal':
+        return <DollarSign className="h-5 w-5" />;
+      case 'cash':
+        return <Truck className="h-5 w-5" />;
+      default:
+        return <CreditCard className="h-5 w-5" />;
+    }
+  };
+  
+  const getPaymentMethodName = (method: PaymentMethod) => {
+    switch (method) {
+      case 'credit':
+        return 'Cartão de Crédito';
+      case 'debit':
+        return 'Cartão de Débito';
+      case 'meal':
+        return 'Vale Refeição';
+      case 'cash':
+        return 'Pagamento na Entrega';
+      default:
+        return 'Cartão de Crédito';
+    }
+  };
+  
   if (!order) {
     return (
       <Layout>
@@ -91,7 +125,8 @@ const ConfirmOrder: React.FC = () => {
         <div className="page-container">
           <div className="mb-6">
             <Link
-              to={`/restaurants/${order.restaurantName}`}
+              to={`/restaurants/${order.restaurantId}`}
+              state={{ from: location.pathname }}
               className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ChevronLeft size={16} className="mr-1" />
@@ -104,8 +139,7 @@ const ConfirmOrder: React.FC = () => {
           <div className="max-w-2xl mx-auto">
             <div className="bg-white rounded-lg border overflow-hidden mb-6">
               <div className="border-b p-4">
-                <h2 className="font-semibold text-lg">Resumo do Pedido</h2>
-                <p className="text-gray-500">{order.restaurantName}</p>
+                <h2 className="font-semibold text-lg">{order.restaurantName}</h2>
                 <div className="text-sm text-gray-500 mt-1">
                   <span>Número do Pedido: </span>
                   <span className="font-medium text-gray-700">{order.orderNumber}</span>
@@ -125,6 +159,20 @@ const ConfirmOrder: React.FC = () => {
                       <span className="font-medium">{item.price}</span>
                     </div>
                   ))}
+                </div>
+                
+                <div className="bg-gray-50 p-3 rounded-lg mt-4">
+                  <div className="flex items-center mb-2">
+                    {getPaymentMethodIcon(order.paymentMethod)}
+                    <span className="ml-2 font-medium">{getPaymentMethodName(order.paymentMethod)}</span>
+                  </div>
+                  
+                  {order.paymentDetails && order.paymentMethod !== 'cash' && (
+                    <div className="text-sm text-gray-600">
+                      <p>Cartão: {order.paymentDetails.number}</p>
+                      <p>Titular: {order.paymentDetails.name}</p>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="border-t pt-3 mt-3">

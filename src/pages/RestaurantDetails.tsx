@@ -1,12 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Minus, Plus, ShoppingCart, ChevronLeft, Star } from 'lucide-react';
 import { toast } from '@/lib/toast';
+import { PaymentMethods, PaymentMethod, CardDetails } from '@/components/PaymentMethods';
 
-// Dados simulados para os restaurantes
 const restaurantsData = {
   '1': {
     id: '1',
@@ -183,7 +182,6 @@ const restaurantsData = {
   }
 };
 
-// Tipo para itens do carrinho
 interface CartItem {
   id: string;
   name: string;
@@ -195,18 +193,28 @@ interface CartItem {
 const RestaurantDetails: React.FC = () => {
   const { restaurantId } = useParams<{ restaurantId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [totalValue, setTotalValue] = useState(0);
+  const [showPaymentOptions, setShowPaymentOptions] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('credit');
+  const [selectedCard, setSelectedCard] = useState<CardDetails | null>(null);
   
-  // Buscar os detalhes do restaurante com base no ID
   const restaurant = restaurantId ? restaurantsData[restaurantId as keyof typeof restaurantsData] : null;
   
   useEffect(() => {
-    // Calcular o valor total sempre que cartItems mudar
     const newTotal = cartItems.reduce((sum, item) => sum + (item.priceValue * item.quantity), 0);
     setTotalValue(newTotal);
   }, [cartItems]);
+  
+  const handleBack = () => {
+    if (location.state && location.state.from) {
+      navigate(location.state.from);
+    } else {
+      navigate(-1);
+    }
+  };
   
   if (!restaurant) {
     return (
@@ -230,16 +238,13 @@ const RestaurantDetails: React.FC = () => {
   
   const addToCart = (item: any) => {
     setCartItems(prev => {
-      // Verificar se o item já está no carrinho
       const existingItemIndex = prev.findIndex(cartItem => cartItem.id === item.id);
       
       if (existingItemIndex >= 0) {
-        // Aumentar a quantidade se o item já estiver no carrinho
         const updatedItems = [...prev];
         updatedItems[existingItemIndex].quantity += 1;
         return updatedItems;
       } else {
-        // Adicionar novo item ao carrinho
         return [...prev, { 
           id: item.id, 
           name: item.name, 
@@ -260,11 +265,9 @@ const RestaurantDetails: React.FC = () => {
       if (existingItemIndex >= 0) {
         const updatedItems = [...prev];
         if (updatedItems[existingItemIndex].quantity > 1) {
-          // Diminuir a quantidade se houver mais de um
           updatedItems[existingItemIndex].quantity -= 1;
           return updatedItems;
         } else {
-          // Remover o item se a quantidade for 1
           return prev.filter(item => item.id !== itemId);
         }
       }
@@ -273,21 +276,32 @@ const RestaurantDetails: React.FC = () => {
     });
   };
   
+  const handlePaymentSelect = (method: PaymentMethod, cardDetails: CardDetails | null) => {
+    setSelectedPayment(method);
+    setSelectedCard(cardDetails);
+  };
+  
   const handleFinishOrder = () => {
     if (cartItems.length === 0) {
       toast.error('Adicione itens ao carrinho primeiro');
       return;
     }
     
-    // Armazenar o pedido no sessionStorage para usar na página de confirmação
+    setShowPaymentOptions(true);
+  };
+  
+  const handleConfirmOrder = () => {
     sessionStorage.setItem('currentOrder', JSON.stringify({
       restaurantName: restaurant.name,
+      restaurantId: restaurant.id,
       items: cartItems,
       totalValue: totalValue,
-      orderNumber: `#${Math.floor(10000 + Math.random() * 90000)}`
+      orderNumber: `#${Math.floor(10000 + Math.random() * 90000)}`,
+      paymentMethod: selectedPayment,
+      paymentDetails: selectedCard
     }));
     
-    navigate('/confirm-order');
+    navigate('/confirm-order', { state: { from: `/restaurants/${restaurantId}` } });
   };
   
   return (
@@ -296,7 +310,7 @@ const RestaurantDetails: React.FC = () => {
         <div className="page-container">
           <div className="mb-6">
             <button
-              onClick={() => navigate(-1)}
+              onClick={handleBack}
               className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ChevronLeft size={16} className="mr-1" />
@@ -304,7 +318,6 @@ const RestaurantDetails: React.FC = () => {
             </button>
           </div>
           
-          {/* Header do restaurante */}
           <div className="mb-6">
             <div className="flex items-center mb-4">
               <div className="w-16 h-16 rounded-lg overflow-hidden mr-4">
@@ -331,7 +344,6 @@ const RestaurantDetails: React.FC = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Menu */}
             <div className="md:col-span-2">
               <h2 className="text-lg font-semibold mb-4">Cardápio</h2>
               
@@ -381,7 +393,6 @@ const RestaurantDetails: React.FC = () => {
               </div>
             </div>
             
-            {/* Carrinho */}
             <div>
               <div className="bg-white rounded-lg border p-4 sticky top-24">
                 <h2 className="text-lg font-semibold mb-4">Seu pedido</h2>
@@ -394,33 +405,80 @@ const RestaurantDetails: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="space-y-3 mb-4">
-                      {cartItems.map((item) => (
-                        <div key={item.id} className="flex justify-between items-center">
-                          <div className="flex items-start">
-                            <span className="bg-red-100 text-red-600 w-6 h-6 rounded-full flex items-center justify-center mr-2">
-                              {item.quantity}
-                            </span>
-                            <span className="text-sm">{item.name}</span>
-                          </div>
-                          <span className="font-medium">{item.price}</span>
+                    {!showPaymentOptions ? (
+                      <>
+                        <div className="space-y-3 mb-4">
+                          {cartItems.map((item) => (
+                            <div key={item.id} className="flex justify-between items-center">
+                              <div className="flex items-start">
+                                <span className="bg-red-100 text-red-600 w-6 h-6 rounded-full flex items-center justify-center mr-2">
+                                  {item.quantity}
+                                </span>
+                                <span className="text-sm">{item.name}</span>
+                              </div>
+                              <span className="font-medium">{item.price}</span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                    
-                    <div className="border-t pt-3 mt-3">
-                      <div className="flex justify-between items-center font-semibold">
-                        <span>Total</span>
-                        <span className="text-lg">R${totalValue.toFixed(2).replace('.', ',')}</span>
-                      </div>
-                    </div>
-                    
-                    <Button 
-                      className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white"
-                      onClick={handleFinishOrder}
-                    >
-                      Finalizar Pedido
-                    </Button>
+                        
+                        <div className="border-t pt-3 mt-3">
+                          <div className="flex justify-between items-center font-semibold">
+                            <span>Total</span>
+                            <span className="text-lg">R${totalValue.toFixed(2).replace('.', ',')}</span>
+                          </div>
+                        </div>
+                        
+                        <Button 
+                          className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white"
+                          onClick={handleFinishOrder}
+                        >
+                          Finalizar Pedido
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="space-y-3 mb-4">
+                          <h3 className="font-medium">Forma de pagamento</h3>
+                          <PaymentMethods 
+                            onSelectPayment={handlePaymentSelect}
+                            selectedMethod={selectedPayment}
+                          />
+                        </div>
+                        
+                        <div className="border-t pt-3 mt-3">
+                          <div className="flex justify-between items-center mb-2">
+                            <span>Forma de pagamento</span>
+                            <span>
+                              {selectedPayment === 'credit' && 'Crédito'}
+                              {selectedPayment === 'debit' && 'Débito'}
+                              {selectedPayment === 'meal' && 'Vale Refeição'}
+                              {selectedPayment === 'cash' && 'Pagar na entrega'}
+                            </span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center font-semibold">
+                            <span>Total</span>
+                            <span className="text-lg">R${totalValue.toFixed(2).replace('.', ',')}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2 mt-4">
+                          <Button 
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => setShowPaymentOptions(false)}
+                          >
+                            Voltar
+                          </Button>
+                          <Button 
+                            className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                            onClick={handleConfirmOrder}
+                          >
+                            Confirmar Pedido
+                          </Button>
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
               </div>
