@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CheckCircle2, Clock, PackageOpen, Truck } from 'lucide-react';
+import { CheckCircle2, Clock, MapPin, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type OrderStatus = 'preparing' | 'ready' | 'delivering' | 'delivered';
@@ -9,18 +9,20 @@ interface OrderTrackerProps {
   status: OrderStatus;
   estimatedDelivery: string;
   className?: string;
+  simplified?: boolean;
 }
 
 export const OrderTracker: React.FC<OrderTrackerProps> = ({
   status,
   estimatedDelivery,
   className,
+  simplified = false,
 }) => {
   const steps = [
-    { key: 'preparing', label: 'Preparing', icon: Clock },
-    { key: 'ready', label: 'Ready', icon: PackageOpen },
-    { key: 'delivering', label: 'On the Way', icon: Truck },
-    { key: 'delivered', label: 'Delivered', icon: CheckCircle2 },
+    { key: 'preparing', label: 'Preparando', icon: Clock },
+    { key: 'ready', label: 'Pronto', icon: CheckCircle2 },
+    { key: 'delivering', label: 'A caminho', icon: Truck },
+    { key: 'delivered', label: 'Entregue', icon: CheckCircle2 },
   ];
 
   const getStepStatus = (step: string) => {
@@ -32,12 +34,46 @@ export const OrderTracker: React.FC<OrderTrackerProps> = ({
     return 'upcoming';
   };
 
+  if (simplified) {
+    return (
+      <div className={cn("w-full", className)}>
+        <div className="mb-2">
+          <p className="text-gray-600 text-sm mb-1">
+            Previsão de entrega
+          </p>
+          <h3 className="text-base font-semibold">{estimatedDelivery}</h3>
+        </div>
+        
+        <div className="w-full bg-green-100 h-2 rounded-full mb-4">
+          <div 
+            className="bg-green-500 h-2 rounded-full"
+            style={{ width: status === 'preparing' ? '25%' : status === 'ready' ? '50%' : status === 'delivering' ? '75%' : '100%' }}
+          ></div>
+        </div>
+        
+        <div className="flex items-start gap-3">
+          <div className="bg-green-500 text-white rounded-full p-1">
+            <CheckCircle2 size={18} />
+          </div>
+          <div>
+            <p className="text-sm font-medium">
+              {status === 'preparing' && 'O pedido está sendo preparado e logo sairá pra entrega'}
+              {status === 'ready' && 'Seu pedido está pronto e será enviado em breve'}
+              {status === 'delivering' && 'Seu pedido está a caminho'}
+              {status === 'delivered' && 'Seu pedido foi entregue'}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={cn("w-full bg-card rounded-xl border border-border p-6", className)}>
       <div className="mb-6">
-        <h3 className="text-lg font-medium">Tracking Your Order</h3>
+        <h3 className="text-lg font-medium">Acompanhando Seu Pedido</h3>
         <p className="text-sm text-muted-foreground">
-          Estimated delivery by {estimatedDelivery}
+          Previsão de entrega: {estimatedDelivery}
         </p>
       </div>
       
@@ -87,9 +123,9 @@ export const OrderTracker: React.FC<OrderTrackerProps> = ({
                       }
                     )}
                   >
-                    {stepStatus === 'current' && `Your order is ${step.label.toLowerCase()}...`}
-                    {stepStatus === 'completed' && `Your order has been ${step.label.toLowerCase()}`}
-                    {stepStatus === 'upcoming' && `Waiting to be ${step.label.toLowerCase()}`}
+                    {stepStatus === 'current' && `Seu pedido está ${step.label.toLowerCase()}...`}
+                    {stepStatus === 'completed' && `Seu pedido foi ${step.label.toLowerCase()}`}
+                    {stepStatus === 'upcoming' && `Aguardando para ser ${step.label.toLowerCase()}`}
                   </p>
                 </div>
               </div>

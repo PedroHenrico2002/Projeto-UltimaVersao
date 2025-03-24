@@ -47,10 +47,28 @@ const ConfirmOrder: React.FC = () => {
   }, [navigate]);
   
   const handleConfirmOrder = () => {
-    // Aqui você poderia enviar o pedido para um servidor
-    // Simulando confirmação bem-sucedida
-    toast.success('Pedido confirmado com sucesso!');
-    navigate('/order-complete');
+    // Salvar informações do pedido para uso na tela de detalhes
+    if (order) {
+      // Simular tempo estimado de entrega (30-45 minutos a partir de agora)
+      const now = new Date();
+      const deliveryTime = new Date(now.getTime() + 30 * 60000);
+      const deliveryEndTime = new Date(now.getTime() + 45 * 60000);
+      
+      const deliveryTimeStr = `${deliveryTime.getHours()}:${String(deliveryTime.getMinutes()).padStart(2, '0')}`;
+      const deliveryEndTimeStr = `${deliveryEndTime.getHours()}:${String(deliveryEndTime.getMinutes()).padStart(2, '0')}`;
+      
+      const orderDetails = {
+        ...order,
+        orderTime: now.toISOString(),
+        estimatedDelivery: `Hoje, ${deliveryTimeStr} - ${deliveryEndTimeStr}`,
+        address: "Rua Augusta, 1500 - Consolação, São Paulo",
+        status: 'preparing'
+      };
+      
+      sessionStorage.setItem('orderDetails', JSON.stringify(orderDetails));
+      toast.success('Pedido confirmado com sucesso!');
+      navigate('/order-details');
+    }
   };
   
   if (!order) {
