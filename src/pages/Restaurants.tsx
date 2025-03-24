@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
-import { Link } from 'react-router-dom';
-import { Search, Filter } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Search, Filter, ArrowDownAZ, Star, TrendingUp } from 'lucide-react';
 import { toast } from '@/lib/toast';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 
 // Dados simulados
 const restaurants = [
@@ -15,6 +22,8 @@ const restaurants = [
     deliveryTime: '25-40 min',
     minOrder: 'R$15,90',
     featured: true,
+    orderCount: 120,
+    category: 'restaurants'
   },
   {
     id: '2',
@@ -24,6 +33,8 @@ const restaurants = [
     rating: 4.9,
     deliveryTime: '30-45 min',
     minOrder: 'R$25,00',
+    orderCount: 98,
+    category: 'restaurants'
   },
   {
     id: '3',
@@ -33,6 +44,8 @@ const restaurants = [
     rating: 4.7,
     deliveryTime: '35-50 min',
     minOrder: 'R$30,00',
+    orderCount: 76,
+    category: 'restaurants'
   },
   {
     id: '4',
@@ -42,6 +55,8 @@ const restaurants = [
     rating: 4.5,
     deliveryTime: '20-35 min',
     minOrder: 'R$12,90',
+    orderCount: 145,
+    category: 'restaurants'
   },
 ];
 
@@ -56,6 +71,8 @@ const dessertRestaurants = [
     deliveryTime: '20-35 min',
     minOrder: 'R$5,90',
     featured: true,
+    orderCount: 110,
+    category: 'desserts'
   },
   {
     id: '6',
@@ -65,6 +82,8 @@ const dessertRestaurants = [
     rating: 4.6,
     deliveryTime: '15-30 min',
     minOrder: 'R$6,50',
+    orderCount: 85,
+    category: 'desserts'
   },
   {
     id: '7',
@@ -74,6 +93,8 @@ const dessertRestaurants = [
     rating: 4.8,
     deliveryTime: '25-40 min',
     minOrder: 'R$7,50',
+    orderCount: 65,
+    category: 'desserts'
   },
   {
     id: '8',
@@ -83,6 +104,8 @@ const dessertRestaurants = [
     rating: 4.7,
     deliveryTime: '20-35 min',
     minOrder: 'R$5,50',
+    orderCount: 92,
+    category: 'desserts'
   },
 ];
 
@@ -98,32 +121,52 @@ const cuisineFilters = [
   'Açaí',
 ];
 
+// Combine both arrays
+const allRestaurants = [...restaurants, ...dessertRestaurants];
+
 const Restaurants: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('Todos');
   const [showFilters, setShowFilters] = useState(false);
+  const [sortOption, setSortOption] = useState<'name' | 'rating' | 'orderCount'>('name');
+  const [displayedRestaurants, setDisplayedRestaurants] = useState(allRestaurants);
+  
+  const categoryParam = searchParams.get('category');
 
-  // Filtrar restaurantes com base na consulta de pesquisa e filtro ativo
-  const filteredRestaurants = restaurants.filter((restaurant) => {
-    const matchesSearch = restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        restaurant.cuisine.toLowerCase().includes(searchQuery.toLowerCase());
+  useEffect(() => {
+    // First filter by category
+    let filteredByCategory = allRestaurants;
     
-    const matchesFilter = activeFilter === 'Todos' || 
-                        restaurant.cuisine.toLowerCase().includes(activeFilter.toLowerCase());
+    if (categoryParam) {
+      filteredByCategory = allRestaurants.filter(r => r.category === categoryParam);
+    }
     
-    return matchesSearch && matchesFilter;
-  });
-
-  // Filtrar sobremesas com base na consulta de pesquisa e filtro ativo
-  const filteredDesserts = dessertRestaurants.filter((restaurant) => {
-    const matchesSearch = restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        restaurant.cuisine.toLowerCase().includes(searchQuery.toLowerCase());
+    // Then apply search and cuisine filter
+    const filtered = filteredByCategory.filter((restaurant) => {
+      const matchesSearch = restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          restaurant.cuisine.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesFilter = activeFilter === 'Todos' || 
+                          restaurant.cuisine.toLowerCase().includes(activeFilter.toLowerCase());
+      
+      return matchesSearch && matchesFilter;
+    });
     
-    const matchesFilter = activeFilter === 'Todos' || 
-                        restaurant.cuisine.toLowerCase().includes(activeFilter.toLowerCase());
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      if (sortOption === 'name') {
+        return a.name.localeCompare(b.name);
+      } else if (sortOption === 'rating') {
+        return b.rating - a.rating;
+      } else if (sortOption === 'orderCount') {
+        return b.orderCount - a.orderCount;
+      }
+      return 0;
+    });
     
-    return matchesSearch && matchesFilter;
-  });
+    setDisplayedRestaurants(sorted);
+  }, [searchQuery, activeFilter, sortOption, categoryParam]);
 
   return (
     <Layout>
@@ -144,98 +187,119 @@ const Restaurants: React.FC = () => {
               />
             </div>
             
-            <div className="flex items-center space-x-2 mb-4">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full"
-              >
-                <Filter size={16} className="mr-1" />
-                Filtros
-              </button>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full"
+                >
+                  <Filter size={16} className="mr-1" />
+                  Filtros
+                </button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex items-center text-sm">
+                      Ordenar
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => setSortOption('name')} className="flex items-center">
+                      <ArrowDownAZ size={16} className="mr-2" />
+                      <span>A-Z</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortOption('rating')} className="flex items-center">
+                      <Star size={16} className="mr-2" />
+                      <span>Avaliação</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortOption('orderCount')} className="flex items-center">
+                      <TrendingUp size={16} className="mr-2" />
+                      <span>Mais pedidos</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
               
-              {showFilters && (
-                <div className="flex overflow-x-auto space-x-2 pb-2">
-                  {cuisineFilters.map((filter) => (
-                    <button
-                      key={filter}
-                      onClick={() => setActiveFilter(filter)}
-                      className={`text-sm px-3 py-1 rounded-full whitespace-nowrap ${
-                        activeFilter === filter
-                          ? 'bg-red-600 text-white'
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                      }`}
-                    >
-                      {filter}
-                    </button>
-                  ))}
+              {/* Category Filters */}
+              {categoryParam !== 'desserts' && categoryParam !== 'restaurants' && (
+                <div className="flex items-center space-x-2">
+                  <Link 
+                    to="/restaurants?category=restaurants" 
+                    className={`text-sm px-3 py-1 rounded-full ${
+                      categoryParam === 'restaurants' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                    }`}
+                  >
+                    Restaurantes
+                  </Link>
+                  <Link 
+                    to="/restaurants?category=desserts" 
+                    className={`text-sm px-3 py-1 rounded-full ${
+                      categoryParam === 'desserts' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                    }`}
+                  >
+                    Sobremesas
+                  </Link>
                 </div>
               )}
             </div>
+            
+            {showFilters && (
+              <div className="flex overflow-x-auto space-x-2 pb-2">
+                {cuisineFilters.map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setActiveFilter(filter)}
+                    className={`text-sm px-3 py-1 rounded-full whitespace-nowrap ${
+                      activeFilter === filter
+                        ? 'bg-red-600 text-white'
+                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                    }`}
+                  >
+                    {filter}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           
-          {/* Restaurants Section */}
+          {/* Restaurant/Dessert Section */}
           <section className="mb-10">
-            <h2 className="text-xl font-bold mb-6">Restaurantes</h2>
+            <h2 className="text-xl font-bold mb-6">
+              {categoryParam === 'desserts' ? 'Sobremesas' : 
+               categoryParam === 'restaurants' ? 'Restaurantes' : 
+               'Todos os Estabelecimentos'}
+            </h2>
             
             <div className="grid grid-cols-1 gap-4">
-              {filteredRestaurants.map((restaurant) => (
-                <Link key={restaurant.id} to={`/restaurants/${restaurant.id}`} className="block">
-                  <div className="flex items-center border rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow">
-                    <div className="w-20 h-20 bg-gray-200">
-                      <img 
-                        src={restaurant.image} 
-                        alt={restaurant.name} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 p-3">
-                      <h3 className="font-medium">{restaurant.name}</h3>
-                      <p className="text-xs text-gray-500">{restaurant.cuisine}</p>
-                      <div className="flex items-center text-yellow-500 text-sm">
-                        <span className="mr-1">★</span>
-                        <span>{restaurant.rating}</span>
+              {displayedRestaurants.length > 0 ? (
+                displayedRestaurants.map((restaurant) => (
+                  <Link key={restaurant.id} to={`/restaurants/${restaurant.id}`} className="block">
+                    <div className="flex items-center border rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow">
+                      <div className="w-20 h-20 bg-gray-200">
+                        <img 
+                          src={restaurant.image} 
+                          alt={restaurant.name} 
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-                      <div className="flex justify-between text-sm text-gray-500 mt-1">
-                        <span>{restaurant.deliveryTime}</span>
-                        <span>{restaurant.minOrder}</span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-          
-          {/* Sobremesa Section */}
-          <section>
-            <h2 className="text-xl font-bold mb-6">Sobremesa</h2>
-            
-            <div className="grid grid-cols-1 gap-4">
-              {filteredDesserts.map((restaurant) => (
-                <Link key={restaurant.id} to={`/restaurants/${restaurant.id}`} className="block">
-                  <div className="flex items-center border rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow">
-                    <div className="w-20 h-20 bg-gray-200">
-                      <img 
-                        src={restaurant.image} 
-                        alt={restaurant.name} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 p-3">
-                      <h3 className="font-medium">{restaurant.name}</h3>
-                      <p className="text-xs text-gray-500">{restaurant.cuisine}</p>
-                      <div className="flex items-center text-yellow-500 text-sm">
-                        <span className="mr-1">★</span>
-                        <span>{restaurant.rating}</span>
-                      </div>
-                      <div className="flex justify-between text-sm text-gray-500 mt-1">
-                        <span>{restaurant.deliveryTime}</span>
-                        <span>{restaurant.minOrder}</span>
+                      <div className="flex-1 p-3">
+                        <h3 className="font-medium">{restaurant.name}</h3>
+                        <p className="text-xs text-gray-500">{restaurant.cuisine}</p>
+                        <div className="flex items-center text-yellow-500 text-sm">
+                          <span className="mr-1">★</span>
+                          <span>{restaurant.rating}</span>
+                        </div>
+                        <div className="flex justify-between text-sm text-gray-500 mt-1">
+                          <span>{restaurant.deliveryTime}</span>
+                          <span>{restaurant.minOrder}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))
+              ) : (
+                <p className="text-center text-gray-500 my-8">Nenhum resultado encontrado.</p>
+              )}
             </div>
           </section>
         </div>

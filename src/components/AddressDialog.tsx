@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { MapPin, Plus, Check } from 'lucide-react';
+import { MapPin, Plus, Check, Trash2 } from 'lucide-react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
@@ -117,6 +117,34 @@ export const AddressDialog: React.FC<AddressDialogProps> = ({
     }
   };
 
+  const handleDeleteAddress = (id: string) => {
+    // Check if it's the last address
+    if (addresses.length <= 1) {
+      toast.error('Não é possível excluir o único endereço existente');
+      return;
+    }
+
+    // Check if trying to delete the default address
+    const isDefault = addresses.find(addr => addr.id === id)?.isDefault;
+    
+    // Remove the address
+    const updatedAddresses = addresses.filter(addr => addr.id !== id);
+    
+    // If the deleted address was default, set a new default
+    if (isDefault) {
+      updatedAddresses[0].isDefault = true;
+      
+      // Update address in parent component
+      const defaultAddress = updatedAddresses[0];
+      const formattedAddress = `${defaultAddress.street}, ${defaultAddress.number} - ${defaultAddress.neighborhood}, ${defaultAddress.city}`;
+      onAddressChange(formattedAddress);
+    }
+    
+    setAddresses(updatedAddresses);
+    localStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
+    toast.success('Endereço excluído com sucesso!');
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -154,16 +182,26 @@ export const AddressDialog: React.FC<AddressDialogProps> = ({
                     </div>
                   </div>
                   
-                  {!address.isDefault && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-xs"
-                      onClick={() => handleSetDefault(address.id)}
+                  <div className="flex items-center">
+                    {!address.isDefault && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-xs mr-1"
+                        onClick={() => handleSetDefault(address.id)}
+                      >
+                        Definir como principal
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-500 h-8 w-8"
+                      onClick={() => handleDeleteAddress(address.id)}
                     >
-                      Definir como principal
+                      <Trash2 size={16} />
                     </Button>
-                  )}
+                  </div>
                 </div>
               ))}
             </div>
