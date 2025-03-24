@@ -3,6 +3,8 @@ import React from 'react';
 import { CheckCircle2, Clock, MapPin, Truck, Bike, Star, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 type OrderStatus = 'preparing' | 'ready' | 'delivering' | 'delivered';
 
@@ -190,4 +192,3 @@ export const OrderTracker: React.FC<OrderTrackerProps> = ({
     </div>
   );
 };
-
