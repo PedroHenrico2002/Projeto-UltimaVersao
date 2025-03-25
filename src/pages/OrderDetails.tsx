@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { OrderTracker } from '@/components/OrderTracker';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, MapPin, CreditCard, DollarSign, Truck } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -19,6 +18,7 @@ interface OrderItem {
 
 interface OrderDetails {
   restaurantName: string;
+  restaurantId: string;
   items: OrderItem[];
   totalValue: number;
   orderNumber: string;
@@ -31,16 +31,42 @@ interface OrderDetails {
     number: string;
     name: string;
   } | null;
+  rating?: number;
 }
 
 const OrderDetails: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [status, setStatus] = useState<'preparing' | 'ready' | 'delivering' | 'delivered'>('preparing');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [rating, setRating] = useState(0);
+  const [savedToHistory, setSavedToHistory] = useState(false);
+  
+  const searchParams = new URLSearchParams(location.search);
+  const orderId = searchParams.get('id');
   
   useEffect(() => {
+    if (orderId) {
+      const storedOrders = localStorage.getItem('orderHistory');
+      if (storedOrders) {
+        try {
+          const parsedOrders = JSON.parse(storedOrders);
+          const foundOrder = parsedOrders.find((order: any) => order.orderNumber === orderId);
+          if (foundOrder) {
+            setOrderDetails(foundOrder);
+            setStatus('delivered');
+            if (foundOrder.rating) {
+              setRating(foundOrder.rating);
+            }
+            return;
+          }
+        } catch (error) {
+          console.error('Error loading order from history:', error);
+        }
+      }
+    }
+    
     const orderData = sessionStorage.getItem('orderDetails');
     
     if (!orderData) {
@@ -51,7 +77,6 @@ const OrderDetails: React.FC = () => {
     try {
       const parsedOrder = JSON.parse(orderData);
       
-      // Check if there's a default address in localStorage
       const storedAddresses = localStorage.getItem('savedAddresses');
       if (storedAddresses) {
         const addresses = JSON.parse(storedAddresses);
@@ -63,7 +88,6 @@ const OrderDetails: React.FC = () => {
         }
       }
       
-      // Check if there's a saved rating
       if (parsedOrder.rating) {
         setRating(parsedOrder.rating);
       }
@@ -74,47 +98,61 @@ const OrderDetails: React.FC = () => {
       console.error('Erro ao carregar detalhes do pedido:', error);
       navigate('/restaurants');
     }
-  }, [navigate]);
+  }, [navigate, orderId, location.search]);
   
-  // Simular progresso do pedido ao longo do tempo - Acelerado para 2x mais rápido
   useEffect(() => {
-    if (!orderDetails) return;
+    if (!orderDetails || status === 'delivered' || orderId) return;
     
     const interval = setInterval(() => {
       setElapsedTime(prev => {
         const newTime = prev + 1;
         
-        // Atualizar status com base no tempo decorrido (agora 2x mais rápido)
-        if (newTime === 5) { // Era 10
+        if (newTime === 5) {
           setStatus('ready');
-          // Atualizar no sessionStorage
           const updatedOrder = { ...orderDetails, status: 'ready' };
           sessionStorage.setItem('orderDetails', JSON.stringify(updatedOrder));
-        } else if (newTime === 10) { // Era 20
+        } else if (newTime === 10) {
           setStatus('delivering');
-          // Atualizar no sessionStorage
           const updatedOrder = { ...orderDetails, status: 'delivering' };
           sessionStorage.setItem('orderDetails', JSON.stringify(updatedOrder));
-        } else if (newTime === 17) { // Era 35
+        } else if (newTime === 17) {
           setStatus('delivered');
-          // Atualizar no sessionStorage
           const updatedOrder = { ...orderDetails, status: 'delivered' };
           sessionStorage.setItem('orderDetails', JSON.stringify(updatedOrder));
+          
+          saveToOrderHistory(updatedOrder);
+          
           clearInterval(interval);
         }
         
         return newTime;
       });
-    }, 1000); // Acelerado para 2x mais rápido (antes era 2000)
-
+    }, 1000);
+    
     return () => clearInterval(interval);
-  }, [orderDetails]);
+  }, [orderDetails, status, orderId]);
+  
+  const saveToOrderHistory = (order: OrderDetails) => {
+    if (savedToHistory) return;
+    
+    try {
+      const existingHistory = localStorage.getItem('orderHistory');
+      let orderHistory = existingHistory ? JSON.parse(existingHistory) : [];
+      
+      if (!orderHistory.some((historyOrder: any) => historyOrder.orderNumber === order.orderNumber)) {
+        orderHistory.unshift(order);
+        localStorage.setItem('orderHistory', JSON.stringify(orderHistory));
+        setSavedToHistory(true);
+      }
+    } catch (error) {
+      console.error('Error saving to order history:', error);
+    }
+  };
   
   const handleRating = (rating: number) => {
     setRating(rating);
     toast.success(`Obrigado por avaliar o restaurante com ${rating} estrelas!`);
     
-    // Salvar avaliação no storage
     if (orderDetails) {
       const updatedOrder = { 
         ...orderDetails, 
@@ -122,6 +160,21 @@ const OrderDetails: React.FC = () => {
         status: 'delivered'
       };
       sessionStorage.setItem('orderDetails', JSON.stringify(updatedOrder));
+      
+      if (existingHistory) {
+        try {
+          let orderHistory = JSON.parse(existingHistory);
+          orderHistory = orderHistory.map((historyOrder: any) => {
+            if (historyOrder.orderNumber === updatedOrder.orderNumber) {
+              return { ...historyOrder, rating };
+            }
+            return historyOrder;
+          });
+          localStorage.setItem('orderHistory', JSON.stringify(orderHistory));
+        } catch (error) {
+          console.error('Error updating rating in order history:', error);
+        }
+      }
     }
   };
 
@@ -172,9 +225,15 @@ const OrderDetails: React.FC = () => {
         <div className="page-container">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center">
-              <Link to="/" className="text-red-600 mr-3">
-                <ArrowLeft size={24} />
-              </Link>
+              {orderDetails.restaurantId ? (
+                <Link to={`/restaurants/${orderDetails.restaurantId}`} className="text-red-600 mr-3">
+                  <ArrowLeft size={24} />
+                </Link>
+              ) : (
+                <Link to="/" className="text-red-600 mr-3">
+                  <ArrowLeft size={24} />
+                </Link>
+              )}
               <h1 className="text-xl font-bold">ACOMPANHE SEU PEDIDO</h1>
             </div>
           </div>

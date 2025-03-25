@@ -16,6 +16,7 @@ import Checkout from "./pages/Checkout";
 import OrderComplete from "./pages/OrderComplete";
 import OrderTracking from "./pages/OrderTracking";
 import OrderDetails from "./pages/OrderDetails";
+import Orders from "./pages/Orders";
 import NotFound from "./pages/NotFound";
 
 // Create a new QueryClient instance outside of the component
@@ -39,6 +40,7 @@ const App = () => (
           <Route path="/order-complete" element={<OrderComplete />} />
           <Route path="/tracking" element={<OrderTracking />} />
           <Route path="/order-details" element={<OrderDetails />} />
+          <Route path="/orders" element={<Orders />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
