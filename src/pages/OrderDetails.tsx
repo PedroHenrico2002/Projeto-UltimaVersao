@@ -65,10 +65,10 @@ const OrderDetails: React.FC = () => {
       
       // Simulate order progression
       const stateProgression = [
-        { status: 'preparing' as const, delay: 10000 }, // 10 seconds
-        { status: 'ready' as const, delay: 15000 },     // 15 seconds
-        { status: 'delivering' as const, delay: 20000 },// 20 seconds
-        { status: 'delivered' as const, delay: 0 }      // End state
+        { status: 'preparing' as const, delay: 10000, estimatedDelivery: '15-20 min' }, // 10 seconds
+        { status: 'ready' as const, delay: 15000, estimatedDelivery: '10-15 min' },     // 15 seconds
+        { status: 'delivering' as const, delay: 20000, estimatedDelivery: '5-10 min' },// 20 seconds
+        { status: 'delivered' as const, delay: 0, estimatedDelivery: 'Entregue' }      // End state
       ];
       
       let timeoutIds: NodeJS.Timeout[] = [];
@@ -84,7 +84,7 @@ const OrderDetails: React.FC = () => {
           const id = setTimeout(() => {
             setOrder(prev => {
               if (!prev) return null;
-              const updated = { ...prev, status: state.status };
+              const updated = { ...prev, status: state.status, estimatedDelivery: state.estimatedDelivery };
               
               // Update in sessionStorage too
               sessionStorage.setItem('orderDetails', JSON.stringify(updated));

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +40,7 @@ export const PaymentMethods: React.FC<PaymentMethodsProps> = ({
   const [savedCard, setSavedCard] = useState<SavedCard | null>(null);
   const [formValid, setFormValid] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
   
   useEffect(() => {
     // Check if user is logged in
