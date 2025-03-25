@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -49,7 +48,6 @@ const OrderDetails: React.FC = () => {
   const [rating, setRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
   
-  // For demo purposes, we'll simulate order progression
   useEffect(() => {
     const orderData = sessionStorage.getItem('orderDetails');
     
@@ -59,11 +57,9 @@ const OrderDetails: React.FC = () => {
     }
     
     try {
-      // Parse initial order details
       const parsedOrder = JSON.parse(orderData) as OrderDetails;
       setOrder(parsedOrder);
       
-      // Simulate order progression
       const stateProgression = [
         { status: 'preparing' as const, delay: 10000, estimatedDelivery: '15-20 min' }, // 10 seconds
         { status: 'ready' as const, delay: 15000, estimatedDelivery: '10-15 min' },     // 15 seconds
@@ -84,16 +80,17 @@ const OrderDetails: React.FC = () => {
           const id = setTimeout(() => {
             setOrder(prev => {
               if (!prev) return null;
-              const updated = { ...prev, status: state.status, estimatedDelivery: state.estimatedDelivery };
+              const updated = { 
+                ...prev, 
+                status: state.status, 
+                estimatedDelivery: state.estimatedDelivery 
+              };
               
-              // Update in sessionStorage too
               sessionStorage.setItem('orderDetails', JSON.stringify(updated));
               
-              // Show delivered dialog when delivered
               if (state.status === 'delivered') {
                 setShowDeliveredDialog(true);
                 saveOrderToHistory(updated);
-                // Display confetti effect
                 confetti({
                   particleCount: 100,
                   spread: 70,
@@ -108,7 +105,6 @@ const OrderDetails: React.FC = () => {
           timeoutIds.push(id);
         }
       } else if (parsedOrder.status === 'delivered') {
-        // If already delivered, just show dialog
         setShowDeliveredDialog(true);
       }
       
@@ -122,29 +118,24 @@ const OrderDetails: React.FC = () => {
   }, [navigate]);
   
   const saveOrderToHistory = (completedOrder: OrderDetails) => {
-    // Get user from localStorage
     const userJson = localStorage.getItem('user');
-    if (!userJson) return; // Don't save if no user
+    if (!userJson) return;
     
     const user = JSON.parse(userJson);
-    const userId = user.email; // Use email as unique identifier
+    const userId = user.email;
     
-    // Get existing order history for this user
     const historyKey = `orderHistory_${userId}`;
-    const existingHistoryJson = localStorage.getItem(historyKey);
     let orderHistory: OrderHistoryItem[] = [];
     
-    if (existingHistoryJson) {
-      orderHistory = JSON.parse(existingHistoryJson);
+    if (localStorage.getItem(historyKey)) {
+      orderHistory = JSON.parse(localStorage.getItem(historyKey) as string);
     }
     
-    // Add this order to history if not already there
     if (!orderHistory.some(o => o.orderNumber === completedOrder.orderNumber)) {
       orderHistory.push(completedOrder);
       localStorage.setItem(historyKey, JSON.stringify(orderHistory));
     }
     
-    // Also update the global order history for backward compatibility
     const globalHistoryJson = localStorage.getItem('orderHistory');
     let globalHistory: OrderHistoryItem[] = [];
     
@@ -161,20 +152,16 @@ const OrderDetails: React.FC = () => {
   const handleRateOrder = () => {
     if (!order || rating === 0) return;
     
-    // Update order with rating
     const updatedOrder = { ...order, rating };
     setOrder(updatedOrder);
     
-    // Update in session storage
     sessionStorage.setItem('orderDetails', JSON.stringify(updatedOrder));
     
-    // Update in history
     const userJson = localStorage.getItem('user');
     if (userJson) {
       const user = JSON.parse(userJson);
       const userId = user.email;
       
-      // Update user-specific history
       const historyKey = `orderHistory_${userId}`;
       const existingHistoryJson = localStorage.getItem(historyKey);
       
@@ -186,7 +173,6 @@ const OrderDetails: React.FC = () => {
         localStorage.setItem(historyKey, JSON.stringify(updatedHistory));
       }
       
-      // Update global history
       const globalHistoryJson = localStorage.getItem('orderHistory');
       if (globalHistoryJson) {
         const globalHistory = JSON.parse(globalHistoryJson);
@@ -292,7 +278,10 @@ const OrderDetails: React.FC = () => {
               </div>
               
               <div className="p-4">
-                <OrderTracker status={order.status} />
+                <OrderTracker 
+                  status={order.status} 
+                  estimatedDelivery={order.estimatedDelivery} 
+                />
                 
                 <div className="mt-6 space-y-4">
                   <div className="border-t pt-4">
@@ -362,7 +351,6 @@ const OrderDetails: React.FC = () => {
               </div>
             </div>
             
-            {/* Rating section (shown only for delivered orders) */}
             {order.status === 'delivered' && !order.rating && (
               <div className="bg-white rounded-lg border p-4 text-center">
                 <h3 className="font-semibold mb-2">Avaliar Restaurante:</h3>
@@ -392,7 +380,6 @@ const OrderDetails: React.FC = () => {
               </div>
             )}
             
-            {/* Already rated */}
             {order.status === 'delivered' && order.rating && (
               <div className="bg-white rounded-lg border p-4 text-center">
                 <h3 className="font-semibold mb-2">Sua Avaliação:</h3>
@@ -416,7 +403,6 @@ const OrderDetails: React.FC = () => {
         </div>
       </div>
       
-      {/* Delivered Dialog */}
       <Dialog open={showDeliveredDialog} onOpenChange={setShowDeliveredDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
