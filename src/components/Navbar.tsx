@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MapPin, User, ChevronDown, ShoppingBag } from 'lucide-react';
@@ -48,6 +47,11 @@ export const Navbar: React.FC = () => {
       const parsedOrder = JSON.parse(orderDetails);
       parsedOrder.address = newAddress;
       sessionStorage.setItem('orderDetails', JSON.stringify(parsedOrder));
+      
+      // Refresh the page if on order details page to reflect the address change
+      if (window.location.pathname.includes('order-details')) {
+        window.location.reload();
+      }
     }
   };
   

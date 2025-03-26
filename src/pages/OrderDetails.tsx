@@ -58,6 +58,20 @@ const OrderDetails: React.FC = () => {
     
     try {
       const parsedOrder = JSON.parse(orderData) as OrderDetails;
+      
+      const storedAddresses = localStorage.getItem('savedAddresses');
+      if (storedAddresses) {
+        const addresses = JSON.parse(storedAddresses);
+        const defaultAddress = addresses.find((addr: any) => addr.isDefault);
+        
+        if (defaultAddress) {
+          const formattedAddress = `${defaultAddress.street}, ${defaultAddress.number} - ${defaultAddress.neighborhood}, ${defaultAddress.city} - ${defaultAddress.state}`;
+          
+          parsedOrder.address = formattedAddress;
+          sessionStorage.setItem('orderDetails', JSON.stringify(parsedOrder));
+        }
+      }
+      
       setOrder(parsedOrder);
       
       const stateProgression = [
