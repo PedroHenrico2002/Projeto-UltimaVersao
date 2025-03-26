@@ -48,6 +48,14 @@ const restaurantsData = {
         description: 'Caixa com 12 unidades de doces variados (brigadeiros, beijinhos e cajuzinhos)',
         price: 'R$24,90',
         priceValue: 24.90
+      },
+      {
+        id: '105',
+        name: 'Cheesecake de Frutas Vermelhas',
+        image: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Cheesecake cremoso com calda de frutas vermelhas e base de biscoito',
+        price: 'R$34,90',
+        priceValue: 34.90
       }
     ]
   },
@@ -60,7 +68,46 @@ const restaurantsData = {
     deliveryTime: '30-45 min',
     minOrder: 'R$25,00',
     menu: [
-      
+      {
+        id: '201',
+        name: 'Combo Sushi Premium (30 peças)',
+        image: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Seleção de 30 peças com os melhores rolls, uramakis e niguiris do chef',
+        price: 'R$79,90',
+        priceValue: 79.90
+      },
+      {
+        id: '202',
+        name: 'Sashimi de Salmão (12 fatias)',
+        image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Fatias frescas de salmão importado servidas com molho shoyu especial e wasabi',
+        price: 'R$45,90',
+        priceValue: 45.90
+      },
+      {
+        id: '203',
+        name: 'Temaki Especial',
+        image: 'https://images.unsplash.com/photo-1615361200141-f45625a9296d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Temaki recheado com salmão, cream cheese, manga e cebolinha',
+        price: 'R$24,90',
+        priceValue: 24.90
+      },
+      {
+        id: '204',
+        name: 'Yakisoba Tradicional',
+        image: 'https://images.unsplash.com/photo-1617421753170-46511a9d73bf?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Macarrão oriental salteado com legumes frescos e tiras de frango ou carne (escolha na observação)',
+        price: 'R$38,90',
+        priceValue: 38.90
+      },
+      {
+        id: '205',
+        name: 'Gyoza (6 unidades)',
+        image: 'https://images.unsplash.com/photo-1625938145744-937239906491?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Pastéis japoneses grelhados, recheados com carne de porco e legumes',
+        price: 'R$22,50',
+        priceValue: 22.50
+      }
     ]
   },
   '3': {
@@ -72,7 +119,46 @@ const restaurantsData = {
     deliveryTime: '35-50 min',
     minOrder: 'R$30,00',
     menu: [
-      
+      {
+        id: '301',
+        name: 'Picanha Premium (400g)',
+        image: 'https://images.unsplash.com/photo-1558030006-450675393462?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Corte nobre de picanha, grelhada no ponto desejado, acompanha farofa, vinagrete e pão de alho',
+        price: 'R$79,90',
+        priceValue: 79.90
+      },
+      {
+        id: '302',
+        name: 'Costela Gaúcha (500g)',
+        image: 'https://images.unsplash.com/photo-1544025162-d76694265947?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Costela bovina assada lentamente por 8 horas, extremamente macia, servida com mandioca cozida',
+        price: 'R$64,90',
+        priceValue: 64.90
+      },
+      {
+        id: '303',
+        name: 'Combo Gaúcho (serve 2)',
+        image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Seleção especial de cortes: maminha, linguiça toscana, fraldinha e cupim. Acompanha arroz, feijão, farofa e vinagrete',
+        price: 'R$119,90',
+        priceValue: 119.90
+      },
+      {
+        id: '304',
+        name: 'Linguiça Artesanal (350g)',
+        image: 'https://images.unsplash.com/photo-1597714026720-76d60ae15bbf?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Linguiça suína artesanal grelhada na brasa, temperada com ervas especiais',
+        price: 'R$32,90',
+        priceValue: 32.90
+      },
+      {
+        id: '305',
+        name: 'Arroz Carreteiro',
+        image: 'https://images.unsplash.com/photo-1574484284002-952d92456975?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Tradicional arroz carreteiro preparado com charque, linguiça, cebola e temperos gaúchos',
+        price: 'R$42,90',
+        priceValue: 42.90
+      }
     ]
   },
   '4': {
@@ -84,7 +170,46 @@ const restaurantsData = {
     deliveryTime: '20-35 min',
     minOrder: 'R$12,90',
     menu: [
-      
+      {
+        id: '401',
+        name: 'Feijoada Completa',
+        image: 'https://images.unsplash.com/photo-1571809839227-b2ac3d261257?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Tradicional feijoada com carnes nobres, acompanha arroz, couve, farofa, laranja e torresmo',
+        price: 'R$36,90',
+        priceValue: 36.90
+      },
+      {
+        id: '402',
+        name: 'Escondidinho de Carne Seca',
+        image: 'https://images.unsplash.com/photo-1604909052743-94e838986d24?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Purê de mandioca gratinado com recheio de carne seca desfiada e queijo coalho',
+        price: 'R$29,90',
+        priceValue: 29.90
+      },
+      {
+        id: '403',
+        name: 'Baião de Dois',
+        image: 'https://images.unsplash.com/photo-1551462147-37885acc36f1?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Arroz e feijão de corda cozidos juntos, com queijo coalho, carnes e temperos do sertão',
+        price: 'R$27,50',
+        priceValue: 27.50
+      },
+      {
+        id: '404',
+        name: 'Galinhada com Pequi',
+        image: 'https://images.unsplash.com/photo-1547928576-f8d1c7a1b709?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Arroz com frango caipira, pequi, açafrão e temperos especiais do cerrado',
+        price: 'R$32,90',
+        priceValue: 32.90
+      },
+      {
+        id: '405',
+        name: 'Marmitex Executiva',
+        image: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Arroz, feijão, bife acebolado, batata frita, ovo frito e salada (serve 1 pessoa)',
+        price: 'R$19,90',
+        priceValue: 19.90
+      }
     ]
   },
   '6': {
@@ -190,6 +315,58 @@ const restaurantsData = {
         priceValue: 18.50
       }
     ]
+  },
+  '7': {
+    id: '7',
+    name: 'Confeitaria Doce Sonho',
+    image: 'https://images.unsplash.com/photo-1574085733277-851d9d856a3a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    cuisine: 'Doces e Confeitaria',
+    rating: 4.8,
+    deliveryTime: '25-40 min',
+    minOrder: 'R$7,50',
+    featured: true,
+    menu: [
+      {
+        id: '701',
+        name: 'Éclair de Chocolate',
+        image: 'https://images.unsplash.com/photo-1550617931-e17a7b70dce2?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Massa choux crocante recheada com creme de chocolate belga e cobertura de ganache',
+        price: 'R$12,90',
+        priceValue: 12.90
+      },
+      {
+        id: '702',
+        name: 'Croissant de Amêndoas',
+        image: 'https://images.unsplash.com/photo-1509365465985-25d11c17e812?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Croissant folhado coberto com creme de amêndoas e amêndoas laminadas',
+        price: 'R$15,50',
+        priceValue: 15.50
+      },
+      {
+        id: '703',
+        name: 'Macaron (6 unidades)',
+        image: 'https://images.unsplash.com/photo-1569864358642-9d1684040f43?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Caixa com 6 macarons variados: pistache, framboesa, chocolate, limão, caramelo salgado e flor de laranjeira',
+        price: 'R$24,90',
+        priceValue: 24.90
+      },
+      {
+        id: '704',
+        name: 'Torta Ópera',
+        image: 'https://images.unsplash.com/photo-1574085733277-851d9d856a3a?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Clássica torta francesa com camadas de biscoito Joconde, café, creme de manteiga e chocolate',
+        price: 'R$16,90',
+        priceValue: 16.90
+      },
+      {
+        id: '705',
+        name: 'Paris-Brest',
+        image: 'https://images.unsplash.com/photo-1464305795204-6f5bbfc7fb81?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+        description: 'Tradicional sobremesa francesa de massa choux em formato de roda, recheada com creme pralinê',
+        price: 'R$18,50',
+        priceValue: 18.50
+      }
+    ]
   }
 };
 
@@ -220,7 +397,6 @@ const RestaurantDetails: React.FC = () => {
     setTotalValue(newTotal);
   }, [cartItems]);
 
-  // Validate if the form is complete based on payment method
   useEffect(() => {
     if (selectedPayment === 'cash') {
       setIsFormValid(true);

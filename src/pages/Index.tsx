@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { Link } from 'react-router-dom';
@@ -34,16 +33,6 @@ const categories = [
 // Restaurantes principais
 const mainRestaurants = [
   {
-    id: '1',
-    name: 'Restaurante Italiano',
-    image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    cuisine: 'Italiana',
-    rating: 4.8,
-    deliveryTime: '25-40 min',
-    minOrder: 'R$15,90',
-    featured: true,
-  },
-  {
     id: '2',
     name: 'Restaurante Japonês',
     image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
@@ -75,7 +64,7 @@ const mainRestaurants = [
 // Restaurantes de sobremesa
 const dessertRestaurants = [
   {
-    id: '5',
+    id: '1',
     name: 'Doce Paixão',
     image: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
     cuisine: 'Doces e Bolos',
@@ -85,15 +74,6 @@ const dessertRestaurants = [
     featured: true,
   },
   {
-    id: '6',
-    name: 'Gelato Italiano',
-    image: 'https://images.unsplash.com/photo-1501443762994-82bd5dace89a?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
-    cuisine: 'Sorvetes e Gelatos',
-    rating: 4.6,
-    deliveryTime: '15-30 min',
-    minOrder: 'R$6,50',
-  },
-  {
     id: '7',
     name: 'Confeitaria Doce Sonho',
     image: 'https://images.unsplash.com/photo-1574085733277-851d9d856a3a?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
@@ -101,6 +81,15 @@ const dessertRestaurants = [
     rating: 4.8,
     deliveryTime: '25-40 min',
     minOrder: 'R$7,50',
+  },
+  {
+    id: '6',
+    name: 'Gelato Italiano',
+    image: 'https://images.unsplash.com/photo-1501443762994-82bd5dace89a?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
+    cuisine: 'Sorvetes e Gelatos',
+    rating: 4.6,
+    deliveryTime: '15-30 min',
+    minOrder: 'R$6,50',
   },
   {
     id: '8',
@@ -194,7 +183,7 @@ const Index: React.FC = () => {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">Sobremesa</h2>
               <Link to="/restaurants" className="text-sm text-red-600">
-                Ver todas
+                Ver todos
               </Link>
             </div>
             
