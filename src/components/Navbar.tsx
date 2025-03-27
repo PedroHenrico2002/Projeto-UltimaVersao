@@ -91,7 +91,11 @@ export const Navbar: React.FC = () => {
           </div>
           
           {/* Auth */}
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4">
+            <Link to="/documentation" className="text-sm text-gray-700 hover:text-red-600">
+              Documentação
+            </Link>
+            
             {isLoggedIn ? (
               <div className="flex items-center space-x-2">
                 <User size={18} className="text-red-600" />
