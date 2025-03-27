@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MapPin, User, ChevronDown, ShoppingBag } from 'lucide-react';
+import { MapPin, User, ChevronDown, ShoppingBag, Settings } from 'lucide-react';
 import { AddressDialog } from './AddressDialog';
 
 export const Navbar: React.FC = () => {
@@ -88,14 +88,15 @@ export const Navbar: React.FC = () => {
               <ShoppingBag size={16} className="mr-1" />
               Pedidos
             </Link>
+            
+            <Link to="/admin" className="text-sm text-gray-700 hover:text-red-600 flex items-center">
+              <Settings size={16} className="mr-1" />
+              Admin
+            </Link>
           </div>
           
           {/* Auth */}
           <div className="flex items-center space-x-4">
-            <Link to="/documentation" className="text-sm text-gray-700 hover:text-red-600">
-              Documentação
-            </Link>
-            
             {isLoggedIn ? (
               <div className="flex items-center space-x-2">
                 <User size={18} className="text-red-600" />

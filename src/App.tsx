@@ -19,6 +19,7 @@ import OrderDetails from "./pages/OrderDetails";
 import Orders from "./pages/Orders";
 import SystemDocumentation from "./pages/SystemDocumentation";
 import NotFound from "./pages/NotFound";
+import { CrudManager } from "./components/CrudManager";
 
 const App = () => {
   // Create a new QueryClient instance inside the component
@@ -44,6 +45,7 @@ const App = () => {
             <Route path="/order-details" element={<OrderDetails />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/documentation" element={<SystemDocumentation />} />
+            <Route path="/admin" element={<CrudManager />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,0 +1,271 @@
+
+import React, { useState, useEffect } from 'react';
+import { menuItemService, restaurantService, MenuItem, Restaurant } from '@/utils/databaseService';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Pencil, Trash2, Plus, Utensils } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+
+export const MenuItemCrud: React.FC = () => {
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentMenuItem, setCurrentMenuItem] = useState<Partial<MenuItem>>({});
+  const [isEditing, setIsEditing] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadMenuItems();
+    setRestaurants(restaurantService.getAll());
+  }, []);
+
+  const loadMenuItems = () => {
+    setMenuItems(menuItemService.getAll());
+  };
+
+  const handleOpenDialog = (menuItem?: MenuItem) => {
+    if (menuItem) {
+      setCurrentMenuItem(menuItem);
+      setIsEditing(true);
+    } else {
+      setCurrentMenuItem({
+        name: '',
+        restaurantId: restaurants.length > 0 ? restaurants[0].id : '',
+        description: '',
+        price: 0,
+        category: ''
+      });
+      setIsEditing(false);
+    }
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setCurrentMenuItem({});
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setCurrentMenuItem({ ...currentMenuItem, [name]: value });
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value) || 0;
+    setCurrentMenuItem({ ...currentMenuItem, price: value });
+  };
+
+  const handleRestaurantChange = (value: string) => {
+    setCurrentMenuItem({ ...currentMenuItem, restaurantId: value });
+  };
+
+  const validateForm = () => {
+    if (!currentMenuItem.name || !currentMenuItem.restaurantId || currentMenuItem.price === undefined) {
+      toast({
+        title: "Erro de validação",
+        description: "Nome, restaurante e preço são obrigatórios",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (currentMenuItem.price < 0) {
+      toast({
+        title: "Erro de validação",
+        description: "O preço não pode ser negativo",
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleSave = () => {
+    if (!validateForm()) return;
+    
+    if (isEditing && currentMenuItem.id) {
+      menuItemService.update(currentMenuItem.id, currentMenuItem);
+      toast({
+        title: "Item atualizado",
+        description: "As informações do item foram atualizadas com sucesso",
+      });
+    } else {
+      menuItemService.create(currentMenuItem as Omit<MenuItem, 'id'>);
+      toast({
+        title: "Item criado",
+        description: "Novo item foi criado com sucesso",
+      });
+    }
+    
+    handleCloseDialog();
+    loadMenuItems();
+  };
+
+  const handleDelete = (id: string) => {
+    if (window.confirm('Tem certeza que deseja excluir este item?')) {
+      menuItemService.remove(id);
+      toast({
+        title: "Item excluído",
+        description: "O item foi removido com sucesso",
+      });
+      loadMenuItems();
+    }
+  };
+
+  const getRestaurantName = (restaurantId: string) => {
+    const restaurant = restaurants.find(r => r.id === restaurantId);
+    return restaurant ? restaurant.name : 'Restaurante não encontrado';
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(price);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Gerenciamento de Itens do Cardápio</h3>
+        <Button onClick={() => handleOpenDialog()}>
+          <Plus size={16} className="mr-2" />
+          Novo Item
+        </Button>
+      </div>
+      
+      <div className="border rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead>Restaurante</TableHead>
+              <TableHead>Categoria</TableHead>
+              <TableHead>Preço</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {menuItems.length > 0 ? (
+              menuItems.map((menuItem) => (
+                <TableRow key={menuItem.id}>
+                  <TableCell>{menuItem.name}</TableCell>
+                  <TableCell>{getRestaurantName(menuItem.restaurantId)}</TableCell>
+                  <TableCell>{menuItem.category || '-'}</TableCell>
+                  <TableCell>{formatPrice(menuItem.price)}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="icon" onClick={() => handleOpenDialog(menuItem)}>
+                        <Pencil size={16} />
+                      </Button>
+                      <Button variant="outline" size="icon" onClick={() => handleDelete(menuItem.id)}>
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-4">
+                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                    <Utensils size={24} />
+                    <p>Nenhum item de cardápio cadastrado</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{isEditing ? 'Editar Item' : 'Novo Item'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Nome</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={currentMenuItem.name || ''}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="restaurantId">Restaurante</Label>
+                <Select 
+                  onValueChange={handleRestaurantChange} 
+                  defaultValue={currentMenuItem.restaurantId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um restaurante" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {restaurants.map(restaurant => (
+                      <SelectItem key={restaurant.id} value={restaurant.id}>
+                        {restaurant.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="category">Categoria</Label>
+                <Input
+                  id="category"
+                  name="category"
+                  value={currentMenuItem.category || ''}
+                  onChange={handleInputChange}
+                  placeholder="Ex: Entrada, Prato Principal, Sobremesa"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="price">Preço (R$)</Label>
+                <Input
+                  id="price"
+                  name="price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={currentMenuItem.price || ''}
+                  onChange={handlePriceChange}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="description">Descrição</Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  value={currentMenuItem.description || ''}
+                  onChange={handleInputChange}
+                  rows={3}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="imageUrl">URL da Imagem</Label>
+                <Input
+                  id="imageUrl"
+                  name="imageUrl"
+                  value={currentMenuItem.imageUrl || ''}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCloseDialog}>Cancelar</Button>
+            <Button onClick={handleSave}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
