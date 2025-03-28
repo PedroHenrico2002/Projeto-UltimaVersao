@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Layout } from '@/components/Layout';
 import { SystemArchitecture } from '@/components/SystemArchitecture';
@@ -34,7 +35,7 @@ const SystemDocumentation: React.FC = () => {
           <div className="max-w-4xl mx-auto space-y-8">
             <section className="bg-white shadow-md rounded-lg p-6">
               <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold">Documentação do Sistema - Be Legendary</h1>
+                <h1 className="text-2xl font-bold">Sistema - Be Legendary</h1>
                 <Button 
                   onClick={handleExport} 
                   className="bg-blue-600 hover:bg-blue-700 text-white"
