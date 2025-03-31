@@ -3,6 +3,8 @@
  * Funções utilitárias para o banco de dados
  */
 
+import { sampleUsers, sampleAddresses, sampleCategories, sampleRestaurants, sampleMenuItems } from './sampleData';
+
 // Gera um ID único para novas entidades
 export const generateId = (): string => {
   return Math.random().toString(36).substring(2, 15) + 
@@ -11,9 +13,6 @@ export const generateId = (): string => {
 
 // Inicializa o banco de dados com dados de exemplo se estiver vazio
 export const initializeDatabase = () => {
-  // Importar dados de exemplo
-  const { sampleUsers, sampleAddresses, sampleCategories, sampleRestaurants, sampleMenuItems } = require('./sampleData');
-  
   // Verificar se os dados já existem e criar se necessário
   if (!localStorage.getItem('users')) {
     localStorage.setItem('users', JSON.stringify(sampleUsers));
