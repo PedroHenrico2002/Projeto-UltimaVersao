@@ -3,7 +3,8 @@
  * Funções utilitárias para o banco de dados
  */
 
-import { sampleUsers, sampleAddresses, sampleCategories, sampleRestaurants, sampleMenuItems } from './sampleData'; // Importa dados de exemplo
+// Importa dados de exemplo do novo módulo de dados
+import { sampleUsers, sampleAddresses, sampleCategories, sampleRestaurants, sampleMenuItems } from './sampleData/index';
 
 // Gera um ID único para novas entidades
 export const generateId = (): string => {
