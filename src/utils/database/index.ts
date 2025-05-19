@@ -15,6 +15,7 @@ export { addressService } from './addressService';
 export { categoryService } from './categoryService';
 export { restaurantService } from './restaurantService';
 export { menuItemService } from './menuItemService';
+export { orderService } from './orderService';
 
 // Inicializar o banco de dados quando o módulo é importado
 initializeDatabase();

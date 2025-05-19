@@ -10,17 +10,19 @@ import { UserCrud } from './crud/UserCrud';
 import { AddressCrud } from './crud/AddressCrud';
 import { RestaurantCrud } from './crud/RestaurantCrud';
 import { MenuItemCrud } from './crud/MenuItemCrud';
+import { OrderCrud } from './crud/OrderCrud';
 
 export const CrudManager: React.FC = () => {
   return (
     <div className="w-full my-6">
       <h2 className="text-xl font-semibold mb-4">Implementação CRUD</h2>
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid grid-cols-4 mb-4">
+        <TabsList className="grid grid-cols-5 mb-4">
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="addresses">Endereços</TabsTrigger>
           <TabsTrigger value="restaurants">Restaurantes</TabsTrigger>
           <TabsTrigger value="menuItems">Itens do Cardápio</TabsTrigger>
+          <TabsTrigger value="orders">Pedidos</TabsTrigger>
         </TabsList>
         <TabsContent value="users">
           <UserCrud />
@@ -33,6 +35,9 @@ export const CrudManager: React.FC = () => {
         </TabsContent>
         <TabsContent value="menuItems">
           <MenuItemCrud />
+        </TabsContent>
+        <TabsContent value="orders">
+          <OrderCrud />
         </TabsContent>
       </Tabs>
     </div>
