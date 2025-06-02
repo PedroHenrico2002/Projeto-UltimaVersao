@@ -48,8 +48,8 @@ export interface Restaurant {
   cuisine: string; // Tipo de cozinha do restaurante (italiana, japonesa, etc)
   rating: number; // Avaliação média do restaurante (de 0 a 5)
   deliveryTime: string; // Tempo estimado de entrega (ex: "30-45 min")
-  deliveryFee: number; // Taxa de entrega em valor monetário
-  minOrder: number; // Valor mínimo do pedido em valor monetário
+  deliveryFee: number; // Taxa de entrega em valor monetário (número)
+  minOrder: number; // Valor mínimo do pedido em valor monetário (número)
   imageUrl?: string; // URL da imagem do restaurante (opcional)
   addressId?: string; // ID do endereço do restaurante (opcional)
   isOpen: boolean; // Indica se o restaurante está aberto para pedidos

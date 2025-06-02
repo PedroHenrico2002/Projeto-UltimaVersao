@@ -12,71 +12,92 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 
 export const RestaurantCrud: React.FC = () => {
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [currentRestaurant, setCurrentRestaurant] = useState<Partial<Restaurant>>({});
-  const [isEditing, setIsEditing] = useState(false);
-  const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
-  const { toast } = useToast();
+  // Estados para gerenciar dados e interface
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]); // Lista de restaurantes
+  const [categories, setCategories] = useState<Category[]>([]); // Lista de categorias
+  const [addresses, setAddresses] = useState<Address[]>([]); // Lista de endereços
+  const [isDialogOpen, setIsDialogOpen] = useState(false); // Controla se o dialog está aberto
+  const [currentRestaurant, setCurrentRestaurant] = useState<Partial<Restaurant>>({}); // Restaurante sendo editado
+  const [isEditing, setIsEditing] = useState(false); // Indica se está editando ou criando
+  const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false); // Dialog de endereço
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null); // ID do restaurante selecionado
+  const { toast } = useToast(); // Hook para exibir notificações
 
+  // Carrega dados quando componente é montado
   useEffect(() => {
-    loadRestaurants();
-    setCategories(categoryService.getAll());
-    loadAddresses();
+    loadRestaurants(); // Carrega lista de restaurantes
+    setCategories(categoryService.getAll()); // Carrega categorias
+    loadAddresses(); // Carrega endereços
   }, []);
 
+  // Função para carregar restaurantes do banco
   const loadRestaurants = () => {
     setRestaurants(restaurantService.getAll());
   };
 
+  // Função para carregar endereços de restaurantes
   const loadAddresses = () => {
     setAddresses(addressService.getAll().filter(a => a.isRestaurantAddress));
   };
 
+  // Função para abrir dialog de edição/criação
   const handleOpenDialog = (restaurant?: Restaurant) => {
     if (restaurant) {
+      // Modo edição - preenche dados do restaurante
       setCurrentRestaurant(restaurant);
       setIsEditing(true);
     } else {
+      // Modo criação - valores padrão
       setCurrentRestaurant({
         name: '',
         categoryId: categories.length > 0 ? categories[0].id : '',
         cuisine: '',
         deliveryTime: '',
-        minOrder: '',
-        rating: 0
+        minOrder: 0, // Corrigido para number
+        deliveryFee: 0, // Adicionado campo obrigatório
+        rating: 0,
+        isOpen: true // Adicionado campo obrigatório
       });
       setIsEditing(false);
     }
     setIsDialogOpen(true);
   };
 
+  // Função para fechar dialog
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setCurrentRestaurant({});
   };
 
+  // Função para tratar mudanças nos campos de texto
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setCurrentRestaurant({ ...currentRestaurant, [name]: value });
   };
 
+  // Função para tratar mudanças nos campos numéricos
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCurrentRestaurant({ ...currentRestaurant, [name]: parseFloat(value) || 0 });
+  };
+
+  // Função para selecionar categoria
   const handleCategoryChange = (value: string) => {
     setCurrentRestaurant({ ...currentRestaurant, categoryId: value });
   };
 
+  // Função para selecionar endereço
   const handleAddressChange = (value: string) => {
     setCurrentRestaurant({ ...currentRestaurant, addressId: value });
   };
 
+  // Função para abrir dialog de endereço
   const handleOpenAddressDialog = (restaurantId: string) => {
     setSelectedRestaurantId(restaurantId);
     setIsAddressDialogOpen(true);
   };
 
+  // Função para validar formulário
   const validateForm = () => {
     if (!currentRestaurant.name || !currentRestaurant.categoryId) {
       toast({
@@ -89,16 +110,19 @@ export const RestaurantCrud: React.FC = () => {
     return true;
   };
 
+  // Função para salvar restaurante
   const handleSave = () => {
     if (!validateForm()) return;
     
     if (isEditing && currentRestaurant.id) {
+      // Atualiza restaurante existente
       restaurantService.update(currentRestaurant.id, currentRestaurant);
       toast({
         title: "Restaurante atualizado",
         description: "As informações do restaurante foram atualizadas com sucesso",
       });
     } else {
+      // Cria novo restaurante
       restaurantService.create(currentRestaurant as Omit<Restaurant, 'id'>);
       toast({
         title: "Restaurante criado",
@@ -110,6 +134,7 @@ export const RestaurantCrud: React.FC = () => {
     loadRestaurants();
   };
 
+  // Função para excluir restaurante
   const handleDelete = (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este restaurante?')) {
       restaurantService.remove(id);
@@ -121,11 +146,13 @@ export const RestaurantCrud: React.FC = () => {
     }
   };
 
+  // Função para obter nome da categoria
   const getCategoryName = (categoryId: string) => {
     const category = categories.find(c => c.id === categoryId);
     return category ? `${category.icon || ''} ${category.name}` : 'Categoria não encontrada';
   };
 
+  // Função para obter informações do endereço
   const getAddressInfo = (restaurantId: string) => {
     const restaurant = restaurants.find(r => r.id === restaurantId);
     if (!restaurant || !restaurant.addressId) return 'Sem endereço';
@@ -138,6 +165,7 @@ export const RestaurantCrud: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      {/* Cabeçalho com título e botão de criar */}
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Gerenciamento de Restaurantes</h3>
         <Button onClick={() => handleOpenDialog()}>
@@ -146,6 +174,7 @@ export const RestaurantCrud: React.FC = () => {
         </Button>
       </div>
       
+      {/* Tabela de restaurantes */}
       <div className="border rounded-md">
         <Table>
           <TableHeader>
@@ -189,7 +218,7 @@ export const RestaurantCrud: React.FC = () => {
                   <TableCell>{getCategoryName(restaurant.categoryId)}</TableCell>
                   <TableCell>{restaurant.cuisine || '-'}</TableCell>
                   <TableCell>{restaurant.deliveryTime || '-'}</TableCell>
-                  <TableCell>{restaurant.minOrder || '-'}</TableCell>
+                  <TableCell>R$ {restaurant.minOrder?.toFixed(2) || '-'}</TableCell>
                   <TableCell>{restaurant.rating ? `${restaurant.rating}/5` : '-'}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
@@ -217,6 +246,7 @@ export const RestaurantCrud: React.FC = () => {
         </Table>
       </div>
 
+      {/* Dialog de edição/criação */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -227,6 +257,7 @@ export const RestaurantCrud: React.FC = () => {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid gap-4">
+              {/* Campo nome */}
               <div className="grid gap-2">
                 <Label htmlFor="name">Nome</Label>
                 <Input
@@ -236,6 +267,7 @@ export const RestaurantCrud: React.FC = () => {
                   onChange={handleInputChange}
                 />
               </div>
+              {/* Campo categoria */}
               <div className="grid gap-2">
                 <Label htmlFor="categoryId">Categoria</Label>
                 <Select 
@@ -254,6 +286,7 @@ export const RestaurantCrud: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
+              {/* Campo endereço */}
               {addresses.length > 0 && (
                 <div className="grid gap-2">
                   <Label htmlFor="addressId">Endereço</Label>
@@ -275,6 +308,7 @@ export const RestaurantCrud: React.FC = () => {
                   </Select>
                 </div>
               )}
+              {/* Outros campos do formulário */}
               <div className="grid gap-2">
                 <Label htmlFor="cuisine">Tipo de Cozinha</Label>
                 <Input
@@ -295,13 +329,27 @@ export const RestaurantCrud: React.FC = () => {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="minOrder">Pedido Mínimo</Label>
+                <Label htmlFor="minOrder">Pedido Mínimo (R$)</Label>
                 <Input
                   id="minOrder"
                   name="minOrder"
+                  type="number"
+                  step="0.01"
+                  min="0"
                   value={currentRestaurant.minOrder || ''}
-                  onChange={handleInputChange}
-                  placeholder="R$ 20,00"
+                  onChange={handleNumberChange}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="deliveryFee">Taxa de Entrega (R$)</Label>
+                <Input
+                  id="deliveryFee"
+                  name="deliveryFee"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={currentRestaurant.deliveryFee || ''}
+                  onChange={handleNumberChange}
                 />
               </div>
               <div className="grid gap-2">
@@ -323,7 +371,7 @@ export const RestaurantCrud: React.FC = () => {
                   max="5"
                   step="0.1"
                   value={currentRestaurant.rating || ''}
-                  onChange={handleInputChange}
+                  onChange={handleNumberChange}
                 />
               </div>
             </div>
