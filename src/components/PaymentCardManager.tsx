@@ -66,26 +66,27 @@ export const PaymentCardManager: React.FC<PaymentCardManagerProps> = ({
     localStorage.setItem(cardsKey, JSON.stringify(cards));
   };
   
+  // Função para adicionar um novo cartão
   const handleAddCard = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
+    // Validação básica - verifica se todos os campos obrigatórios estão preenchidos
     if (!newCard.number || !newCard.name || !newCard.expiryDate) {
-      toast.error('Preencha todos os campos');
+      toast.error('Preencha todos os campos obrigatórios');
       return;
     }
     
-    // Format card number
+    // Formatar o número do cartão removendo espaços
     const formattedNumber = newCard.number.replace(/\s/g, '');
     if (formattedNumber.length < 16) {
-      toast.error('Número do cartão inválido');
+      toast.error('Número do cartão deve ter pelo menos 16 dígitos');
       return;
     }
     
-    // Check if this is first card (make it default)
+    // Verificar se é o primeiro cartão (será definido como padrão automaticamente)
     const isFirstCard = savedCards.length === 0;
     
-    // Create new card with ID
+    // Criar o novo cartão com ID único baseado no timestamp
     const card: SavedCard = {
       ...newCard,
       id: Date.now().toString(),
@@ -93,12 +94,12 @@ export const PaymentCardManager: React.FC<PaymentCardManagerProps> = ({
       isDefault: isFirstCard
     };
     
-    // Add to saved cards
+    // Adicionar o cartão à lista de cartões salvos
     const updatedCards = [...savedCards, card];
     setSavedCards(updatedCards);
     saveCards(updatedCards);
     
-    // Reset form
+    // Limpar o formulário após salvar
     setNewCard({
       number: '',
       name: '',
@@ -107,10 +108,11 @@ export const PaymentCardManager: React.FC<PaymentCardManagerProps> = ({
     });
     setShowAddForm(false);
     
-    toast.success('Cartão adicionado com sucesso');
+    // Mostrar mensagem de sucesso
+    toast.success('Cartão salvo! Você pode continuar sua compra.');
     
-    // Select the card if this is the only one
-    if (isFirstCard && onCardSelect) {
+    // IMPORTANTE: Selecionar automaticamente o cartão recém-adicionado para continuar a compra
+    if (onCardSelect) {
       onCardSelect(card);
     }
   };
@@ -287,18 +289,18 @@ export const PaymentCardManager: React.FC<PaymentCardManagerProps> = ({
                       </div>
                     </div>
                     
-                    <div className="flex justify-end gap-2 mt-2">
-                      <Button 
-                        type="button" 
-                        variant="outline"
-                        onClick={() => setShowAddForm(false)}
-                      >
-                        Cancelar
-                      </Button>
-                      <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white">
-                        Salvar Cartão
-                      </Button>
-                    </div>
+                     <div className="flex justify-end gap-2 mt-2">
+                       <Button 
+                         type="button" 
+                         variant="outline"
+                         onClick={() => setShowAddForm(false)}
+                       >
+                         Cancelar
+                       </Button>
+                       <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white">
+                         Salvar e Continuar Compra
+                       </Button>
+                     </div>
                   </div>
                 </form>
               </div>
@@ -309,7 +311,7 @@ export const PaymentCardManager: React.FC<PaymentCardManagerProps> = ({
                 onClick={() => setShowAddForm(true)}
               >
                 <Plus size={16} className="mr-2" />
-                Adicionar Cartão
+                Adicionar Novo Cartão
               </Button>
             )}
           </div>

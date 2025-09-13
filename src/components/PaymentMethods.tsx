@@ -76,10 +76,10 @@ export const PaymentMethods: React.FC<PaymentMethodsProps> = ({
     }
   }, []);
   
-  // Validation
+  // Efeito para validação do formulário
   useEffect(() => {
     if (paymentTab === 'card' && !savedCard) {
-      // Validate card form
+      // Validar formulário de cartão temporário
       const isValid = 
         cardDetails.number.length >= 16 && 
         cardDetails.name.trim().length > 0 &&
@@ -88,10 +88,10 @@ export const PaymentMethods: React.FC<PaymentMethodsProps> = ({
         
       setFormValid(isValid);
     } else if (paymentTab === 'card' && savedCard) {
-      // Selected saved card is valid
+      // Cartão salvo selecionado é sempre válido
       setFormValid(true);
     } else if (paymentTab === 'cash') {
-      // Cash is always valid
+      // Pagamento em dinheiro é sempre válido
       setFormValid(true);
     }
   }, [paymentTab, cardDetails, savedCard]);
@@ -120,13 +120,17 @@ export const PaymentMethods: React.FC<PaymentMethodsProps> = ({
     }
   };
   
+  // Função para lidar com seleção de cartão salvo
   const handleSavedCardSelect = (card: SavedCard) => {
     setSavedCard(card);
+    // Selecionar automaticamente o cartão para pagamento
     handleSelectPayment(card.type, {
       number: card.number,
       name: card.name,
       expiryDate: card.expiryDate
     });
+    // Mostrar feedback ao usuário
+    toast.success(`Cartão ${card.name} selecionado para pagamento`);
   };
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
