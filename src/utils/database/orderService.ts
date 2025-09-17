@@ -1,80 +1,147 @@
 
-/**
- * Serviço para gerenciamento de pedidos
- * Este arquivo contém funções para manipular dados de pedidos no localStorage
- */
+import { OrderDetails, OrderItem } from '@/types/order';
+import { supabase } from '@/integrations/supabase/client';
 
-import { OrderDetails } from '@/types/order';
-import { getAll, getById, create, update, remove } from './crudOperations';
+// Helper function to convert database order to OrderDetails format
+const mapDatabaseOrderToOrderDetails = async (dbOrder: any): Promise<OrderDetails> => {
+  // Get restaurant name
+  const { data: restaurant } = await supabase
+    .from('restaurants')
+    .select('name')
+    .eq('id', dbOrder.restaurant_id)
+    .single();
 
-// Exporta funções específicas para gerenciamento de pedidos
+  // Get address
+  const { data: address } = await supabase
+    .from('addresses')
+    .select('street, number, neighborhood, city')
+    .eq('id', dbOrder.delivery_address_id)
+    .single();
+
+  const addressString = address 
+    ? `${address.street}, ${address.number} - ${address.neighborhood}, ${address.city}`
+    : 'Endereço não encontrado';
+
+  // Calculate estimated delivery time (30-45 minutes from order time)
+  const orderTime = new Date(dbOrder.created_at);
+  const deliveryTime = new Date(orderTime.getTime() + 30 * 60000);
+  const deliveryEndTime = new Date(orderTime.getTime() + 45 * 60000);
+  
+  const deliveryTimeStr = `${deliveryTime.getHours()}:${String(deliveryTime.getMinutes()).padStart(2, '0')}`;
+  const deliveryEndTimeStr = `${deliveryEndTime.getHours()}:${String(deliveryEndTime.getMinutes()).padStart(2, '0')}`;
+
+  return {
+    restaurantName: restaurant?.name || 'Restaurante não encontrado',
+    restaurantId: dbOrder.restaurant_id,
+    items: Array.isArray(dbOrder.items) ? dbOrder.items : [],
+    totalValue: Number(dbOrder.total),
+    orderNumber: dbOrder.id,
+    orderTime: dbOrder.created_at,
+    estimatedDelivery: `Hoje, ${deliveryTimeStr} - ${deliveryEndTimeStr}`,
+    address: addressString,
+    status: dbOrder.status as 'preparing' | 'ready' | 'delivering' | 'delivered',
+    paymentMethod: dbOrder.payment_method as any || 'cash',
+    paymentDetails: null
+  };
+};
+
+// Service for managing orders in Supabase
 export const orderService = {
-  // Obtém todos os pedidos do localStorage
-  getAll: () => {
-    // Busca o histórico de pedidos armazenado no localStorage
-    const orderHistory = localStorage.getItem('orderHistory');
-    // Se existir dados, converte para objeto JavaScript e retorna
-    if (orderHistory) {
-      return JSON.parse(orderHistory);
-    }
-    // Caso contrário, retorna um array vazio
-    return [];
+  // Get all orders for the current user
+  getAll: async (): Promise<OrderDetails[]> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    if (!data) return [];
+
+    // Convert database orders to OrderDetails format
+    const orderDetails = await Promise.all(
+      data.map(order => mapDatabaseOrderToOrderDetails(order))
+    );
+
+    return orderDetails;
   },
   
-  // Obtém um pedido específico pelo número do pedido
-  getById: (orderNumber: string) => {
-    // Busca todos os pedidos
-    const orders = orderService.getAll();
-    // Encontra e retorna o pedido que corresponde ao número informado
-    return orders.find((order: OrderDetails) => order.orderNumber === orderNumber);
+  // Get a specific order by ID
+  getById: async (orderId: string): Promise<OrderDetails> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('id', orderId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (error) throw error;
+    return mapDatabaseOrderToOrderDetails(data);
   },
   
-  // Cria um novo pedido no localStorage
-  create: (data: OrderDetails) => {
-    // Obtém a lista atual de pedidos
-    const orders = orderService.getAll();
-    // Adiciona o novo pedido à lista
-    orders.push(data);
-    // Salva a lista atualizada no localStorage
-    localStorage.setItem('orderHistory', JSON.stringify(orders));
-    // Retorna os dados do novo pedido
+  // Create a new order
+  create: async (orderData: {
+    restaurant_id: string;
+    delivery_address_id: string;
+    items: any[];
+    subtotal: number;
+    delivery_fee: number;
+    total: number;
+    payment_method?: string;
+    notes?: string;
+  }) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('orders')
+      .insert({
+        user_id: user.id,
+        ...orderData,
+        status: 'pending'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
     return data;
   },
   
-  // Atualiza um pedido existente pelo número do pedido
-  update: (orderNumber: string, data: Partial<OrderDetails>) => {
-    // Obtém todos os pedidos
-    const orders = orderService.getAll();
-    // Encontra o índice do pedido que será atualizado
-    const orderIndex = orders.findIndex((order: OrderDetails) => order.orderNumber === orderNumber);
-    
-    // Se o pedido não for encontrado, retorna undefined
-    if (orderIndex === -1) return undefined;
-    
-    // Cria uma cópia do pedido existente e mescla com os novos dados
-    const updatedOrder = { ...orders[orderIndex], ...data };
-    // Atualiza o pedido na lista
-    orders[orderIndex] = updatedOrder;
-    
-    // Salva a lista atualizada no localStorage
-    localStorage.setItem('orderHistory', JSON.stringify(orders));
-    // Retorna o pedido atualizado
-    return updatedOrder;
+  // Update an existing order
+  update: async (orderId: string, updates: any) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('orders')
+      .update(updates)
+      .eq('id', orderId)
+      .eq('user_id', user.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   },
   
-  // Remove um pedido pelo número do pedido
-  remove: (orderNumber: string) => {
-    // Obtém todos os pedidos
-    const orders = orderService.getAll();
-    // Filtra os pedidos, removendo o que corresponde ao número informado
-    const filteredOrders = orders.filter((order: OrderDetails) => order.orderNumber !== orderNumber);
-    
-    // Se o tamanho da lista não mudou, significa que o pedido não foi encontrado
-    if (filteredOrders.length === orders.length) return false;
-    
-    // Salva a lista filtrada no localStorage
-    localStorage.setItem('orderHistory', JSON.stringify(filteredOrders));
-    // Retorna true indicando sucesso na remoção
+  // Delete an order
+  remove: async (orderId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { error } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', orderId)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
     return true;
   }
 };

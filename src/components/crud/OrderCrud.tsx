@@ -38,8 +38,14 @@ export const OrderCrud: React.FC = () => {
   }, []);
 
   // Função para carregar os pedidos do serviço
-  const loadOrders = () => {
-    setOrders(orderService.getAll());
+  const loadOrders = async () => {
+    try {
+      const orders = await orderService.getAll();
+      setOrders(orders);
+    } catch (error) {
+      console.error('Erro ao carregar pedidos:', error);
+      setOrders([]);
+    }
   };
 
   // Manipulador para abrir o diálogo de edição ou criação

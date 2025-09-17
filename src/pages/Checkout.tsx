@@ -5,6 +5,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Calendar, Check, ChevronLeft, CreditCard, MapPin, Shield } from 'lucide-react';
 import { toast } from '@/lib/toast';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { orderService } from '@/utils/database/orderService';
 
 // Mock data
 const deliveryAddress = '350 Fifth Avenue, New York, NY 10118';
@@ -63,9 +66,57 @@ const Checkout: React.FC = () => {
   const [deliveryOption, setDeliveryOption] = useState(deliveryTimes[0].id);
   const [scheduledTime, setScheduledTime] = useState('');
   
-  const handlePlaceOrder = () => {
-    toast.success('Order placed successfully!');
-    navigate('/order-complete');
+  const handlePlaceOrder = async () => {
+    const { user } = useAuth();
+    
+    if (!user) {
+      toast.error('Você precisa estar logado para fazer um pedido');
+      navigate('/auth');
+      return;
+    }
+
+    try {
+      // Get user's default address or use first available address
+      const { data: addresses } = await supabase
+        .from('addresses')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('is_default', { ascending: false });
+
+      if (!addresses || addresses.length === 0) {
+        toast.error('Você precisa cadastrar um endereço para fazer pedidos');
+        navigate('/profile');
+        return;
+      }
+
+      const deliveryAddress = addresses[0];
+
+      // Create order data
+      const orderData = {
+        restaurant_id: '1', // This should come from the actual restaurant
+        delivery_address_id: deliveryAddress.id,
+        items: orderSummaryItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          price: parseFloat(item.price.replace('$', ''))
+        })),
+        subtotal: 31.97,
+        delivery_fee: 3.99,
+        total: 38.84,
+        payment_method: selectedPayment,
+        notes: ''
+      };
+
+      // Save order to database
+      const order = await orderService.create(orderData);
+      
+      toast.success('Pedido realizado com sucesso!');
+      navigate('/order-complete', { state: { orderId: order.id } });
+    } catch (error) {
+      console.error('Erro ao criar pedido:', error);
+      toast.error('Erro ao finalizar pedido. Tente novamente.');
+    }
   };
   
   return (

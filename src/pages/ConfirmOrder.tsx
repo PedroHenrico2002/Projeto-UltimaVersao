@@ -7,6 +7,9 @@ import { Check, ChevronLeft, CreditCard, Truck, DollarSign, LogIn } from 'lucide
 import { toast } from '@/lib/toast';
 import { PaymentMethod, CardDetails } from '@/components/PaymentMethods';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { orderService } from '@/utils/database/orderService';
 
 interface OrderItem {
   id: string;
@@ -32,11 +35,11 @@ const ConfirmOrder: React.FC = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const { user } = useAuth();
   
   useEffect(() => {
-    // Check login status
-    const userJson = localStorage.getItem('user');
-    setIsLoggedIn(!!userJson);
+    // Check if user is authenticated
+    setIsLoggedIn(!!user);
     
     // Recover order data from sessionStorage
     const orderData = sessionStorage.getItem('currentOrder');
@@ -56,42 +59,63 @@ const ConfirmOrder: React.FC = () => {
       toast.error('Erro ao carregar os dados do pedido');
       navigate('/restaurants');
     }
-  }, [navigate]);
+  }, [navigate, user]);
   
-  const handleConfirmOrder = () => {
-    if (!isLoggedIn) {
+  const handleConfirmOrder = async () => {
+    const { user } = useAuth();
+    
+    if (!user) {
       setShowLoginDialog(true);
       return;
     }
     
-    // Continue with order confirmation
     if (order) {
-      // Simulate delivery time (30-45 minutes from now)
-      const now = new Date();
-      const deliveryTime = new Date(now.getTime() + 30 * 60000);
-      const deliveryEndTime = new Date(now.getTime() + 45 * 60000);
-      
-      const deliveryTimeStr = `${deliveryTime.getHours()}:${String(deliveryTime.getMinutes()).padStart(2, '0')}`;
-      const deliveryEndTimeStr = `${deliveryEndTime.getHours()}:${String(deliveryEndTime.getMinutes()).padStart(2, '0')}`;
-      
-      const orderDetails = {
-        ...order,
-        orderTime: now.toISOString(),
-        estimatedDelivery: `Hoje, ${deliveryTimeStr} - ${deliveryEndTimeStr}`,
-        address: "Rua Augusta, 1500 - Consolação, São Paulo",
-        status: 'preparing' as const
-      };
-      
-      sessionStorage.setItem('orderDetails', JSON.stringify(orderDetails));
-      toast.success('Pedido confirmado com sucesso!');
-      navigate('/order-details');
+      try {
+        // Get user's default address
+        const { data: addresses } = await supabase
+          .from('addresses')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('is_default', { ascending: false });
+
+        if (!addresses || addresses.length === 0) {
+          toast.error('Você precisa cadastrar um endereço para fazer pedidos');
+          navigate('/profile');
+          return;
+        }
+
+        const deliveryAddress = addresses[0];
+
+        // Create order in database
+        const orderData = {
+          restaurant_id: order.restaurantId,
+          delivery_address_id: deliveryAddress.id,
+          items: order.items,
+          subtotal: order.totalValue,
+          delivery_fee: 0,
+          total: order.totalValue,
+          payment_method: order.paymentMethod,
+          notes: ''
+        };
+
+        const createdOrder = await orderService.create(orderData);
+        
+        // Clear session storage
+        sessionStorage.removeItem('currentOrder');
+        
+        toast.success('Pedido confirmado com sucesso!');
+        navigate('/order-complete', { state: { orderId: createdOrder.id } });
+      } catch (error) {
+        console.error('Erro ao confirmar pedido:', error);
+        toast.error('Erro ao finalizar pedido. Tente novamente.');
+      }
     }
   };
   
   const handleLogin = () => {
     // Save current order to session storage so we can return to it
     sessionStorage.setItem('returnToConfirmOrder', 'true');
-    navigate('/login');
+    navigate('/auth');
   };
   
   const getPaymentMethodIcon = (method: PaymentMethod) => {
