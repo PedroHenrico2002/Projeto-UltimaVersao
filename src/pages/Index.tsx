@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { profileService } from '@/services/supabaseService';
 
@@ -126,7 +127,7 @@ const Index: React.FC = () => {
 
   return (
     <Layout>
-      <div className="pt-20 pb-16">
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted pt-20 pb-16">
         <div className="page-container">
           {/* Welcome Message */}
           {user && userName && (
@@ -138,9 +139,14 @@ const Index: React.FC = () => {
           
           {/* Auth Message for Non-Logged Users */}
           {!user && !loading && (
-            <div className="mb-6 p-6 bg-gradient-to-br from-primary/5 to-accent/5 rounded-lg border border-primary/10">
+            <div className="mb-6 p-6 bg-gradient-to-br from-primary/5 to-accent/5 rounded-lg border border-primary/10 text-center">
               <h2 className="text-xl font-semibold text-primary mb-2">Ambiente Personalizado Disponível</h2>
-              <p className="text-muted-foreground">Crie sua conta para ter acesso completo aos restaurantes e personalizar sua experiência</p>
+              <p className="text-muted-foreground mb-4">Faça login para acessar todas as funcionalidades</p>
+              <Link to="/auth">
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                  Fazer Login
+                </Button>
+              </Link>
             </div>
           )}
           
