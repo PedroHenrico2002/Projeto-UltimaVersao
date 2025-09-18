@@ -71,6 +71,12 @@ const Checkout: React.FC = () => {
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [loading, setLoading] = useState(false);
   
+  // Calculate order totals
+  const subtotal = getTotalPrice();
+  const deliveryFee = 3.99;
+  const tax = subtotal * 0.08; // 8% tax
+  const total = subtotal + deliveryFee + tax;
+  
   const handlePlaceOrder = async () => {
     const { user } = useAuth();
     
@@ -313,20 +319,21 @@ const Checkout: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              
-              <div className="mt-6 space-y-4">
-                <Button 
-                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground h-12"
-                  onClick={handlePlaceOrder}
-                >
-                  <Check size={16} className="mr-2" />
-                  <span>Place Order</span>
-                </Button>
                 
-                <p className="text-xs text-muted-foreground flex items-center justify-center">
-                  <Shield size={14} className="mr-1" />
-                  <span>Your payment information is processed securely</span>
-                </p>
+                <div className="mt-6 space-y-4">
+                  <Button 
+                    className="w-full bg-accent hover:bg-accent/90 text-accent-foreground h-12"
+                    onClick={handlePlaceOrder}
+                  >
+                    <Check size={16} className="mr-2" />
+                    <span>Place Order</span>
+                  </Button>
+                  
+                  <p className="text-xs text-muted-foreground flex items-center justify-center">
+                    <Shield size={14} className="mr-1" />
+                    <span>Your payment information is processed securely</span>
+                  </p>
+                </div>
               </div>
             </div>
           </div>
