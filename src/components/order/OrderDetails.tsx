@@ -23,8 +23,8 @@ export const getPaymentMethodName = (method: PaymentMethod): string => {
       return 'Cartão de Crédito';
     case 'debit':
       return 'Cartão de Débito';
-    case 'meal':
-      return 'Vale Refeição';
+    case 'pix':
+      return 'PIX';
     case 'cash':
       return 'Pagamento na Entrega';
     default:

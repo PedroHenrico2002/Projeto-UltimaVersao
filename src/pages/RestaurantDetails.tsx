@@ -4,7 +4,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Minus, Plus, ShoppingCart, ChevronLeft, Star, AlertCircle } from 'lucide-react';
 import { toast } from '@/lib/toast';
-import { PaymentMethods, PaymentMethod, CardDetails } from '@/components/PaymentMethods';
+import { PaymentMethods, PaymentMethod } from '@/components/PaymentMethods';
 
 const restaurantsData = {
   '1': {
@@ -387,7 +387,7 @@ const RestaurantDetails: React.FC = () => {
   const [totalValue, setTotalValue] = useState(0);
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('credit');
-  const [selectedCard, setSelectedCard] = useState<CardDetails | null>(null);
+  const [selectedCard, setSelectedCard] = useState<any>(null);
   const [isFormValid, setIsFormValid] = useState(false);
   
   const restaurant = restaurantId ? restaurantsData[restaurantId as keyof typeof restaurantsData] : null;
@@ -473,9 +473,9 @@ const RestaurantDetails: React.FC = () => {
     });
   };
   
-  const handlePaymentSelect = (method: PaymentMethod, cardDetails: CardDetails | null) => {
-    setSelectedPayment(method);
-    setSelectedCard(cardDetails);
+  const handlePaymentSelect = (paymentData: any) => {
+    setSelectedPayment(paymentData.method);
+    setSelectedCard(paymentData);
   };
   
   const handleFinishOrder = () => {
@@ -644,7 +644,7 @@ const RestaurantDetails: React.FC = () => {
                         <div className="space-y-3 mb-4">
                           <h3 className="font-medium">Forma de pagamento</h3>
                           <PaymentMethods 
-                            onSelectPayment={handlePaymentSelect}
+                            onPaymentSelect={handlePaymentSelect}
                             selectedMethod={selectedPayment}
                           />
                         </div>
@@ -662,7 +662,7 @@ const RestaurantDetails: React.FC = () => {
                             <span>
                               {selectedPayment === 'credit' && 'Crédito'}
                               {selectedPayment === 'debit' && 'Débito'}
-                              {selectedPayment === 'meal' && 'Vale Refeição'}
+                              {selectedPayment === 'pix' && 'PIX'}
                               {selectedPayment === 'cash' && 'Pagar na entrega'}
                             </span>
                           </div>

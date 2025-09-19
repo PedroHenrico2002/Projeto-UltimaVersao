@@ -18,7 +18,7 @@ export interface OrderDetails {
   orderTime: string;
   estimatedDelivery: string;
   address: string;
-  status: 'preparing' | 'ready' | 'delivering' | 'delivered';
+  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivering' | 'delivered';
   paymentMethod: PaymentMethod;
   paymentDetails?: {
     number: string;

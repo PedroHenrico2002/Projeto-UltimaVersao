@@ -1,289 +1,239 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { PaymentCardManager, SavedCard } from './PaymentCardManager';
-import { AlertCircle, CreditCard, Wallet } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CreditCard, Banknote, Smartphone } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 
-// Type definitions
-export type PaymentMethod = 'credit' | 'debit' | 'meal' | 'cash';
+export type PaymentMethod = 'credit' | 'debit' | 'pix' | 'cash';
 
-export interface CardDetails {
-  number: string;
-  name: string;
+interface PaymentData {
+  method: PaymentMethod;
+  cardNumber?: string;
+  cardName?: string;
   expiryDate?: string;
   cvv?: string;
 }
 
 interface PaymentMethodsProps {
-  onSelectPayment: (method: PaymentMethod, cardDetails: CardDetails | null) => void;
-  selectedMethod: PaymentMethod;
+  onPaymentSelect: (paymentData: PaymentData) => void;
+  selectedMethod?: PaymentMethod;
 }
 
 export const PaymentMethods: React.FC<PaymentMethodsProps> = ({ 
-  onSelectPayment, 
-  selectedMethod
+  onPaymentSelect, 
+  selectedMethod = 'credit' 
 }) => {
-  const [paymentTab, setPaymentTab] = useState<string>('card');
-  const [cardType, setCardType] = useState<PaymentMethod>('credit');
-  const [cardDetails, setCardDetails] = useState<CardDetails>({
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('card');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(selectedMethod);
+  const [cardData, setCardData] = useState({
     number: '',
     name: '',
     expiryDate: '',
     cvv: ''
   });
-  const [savedCard, setSavedCard] = useState<SavedCard | null>(null);
-  const [formValid, setFormValid] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const navigate = useNavigate();
-  
+  const [savedCards, setSavedCards] = useState<any[]>([]);
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
+
   useEffect(() => {
-    // Check if user is logged in
-    const userJson = localStorage.getItem('user');
-    if (userJson) {
-      setIsLoggedIn(true);
-      
-      // Get default card if there's one
-      const user = JSON.parse(userJson);
-      const userId = user.email;
-      
-      const cardsKey = `savedCards_${userId}`;
-      const savedCardsJson = localStorage.getItem(cardsKey);
-      
-      if (savedCardsJson) {
-        try {
-          const cards = JSON.parse(savedCardsJson);
-          const defaultCard = cards.find((card: SavedCard) => card.isDefault);
-          if (defaultCard) {
-            setSavedCard(defaultCard);
-            handleSelectPayment(defaultCard.type, {
-              number: defaultCard.number,
-              name: defaultCard.name,
-              expiryDate: defaultCard.expiryDate
-            });
-          }
-        } catch (error) {
-          console.error('Error loading saved cards:', error);
-        }
-      }
-    } else {
-      setIsLoggedIn(false);
+    if (user) {
+      fetchSavedCards();
     }
-  }, []);
-  
-  // Efeito para validação do formulário
-  useEffect(() => {
-    if (paymentTab === 'card' && !savedCard) {
-      // Validar formulário de cartão temporário
-      const isValid = 
-        cardDetails.number.length >= 16 && 
-        cardDetails.name.trim().length > 0 &&
-        cardDetails.expiryDate?.trim().length === 5 &&
-        (cardDetails.cvv?.trim().length ?? 0) >= 3;
-        
-      setFormValid(isValid);
-    } else if (paymentTab === 'card' && savedCard) {
-      // Cartão salvo selecionado é sempre válido
-      setFormValid(true);
-    } else if (paymentTab === 'cash') {
-      // Pagamento em dinheiro é sempre válido
-      setFormValid(true);
-    }
-  }, [paymentTab, cardDetails, savedCard]);
-  
-  const handleSelectPayment = (method: PaymentMethod, details: CardDetails | null = null) => {
-    onSelectPayment(method, details);
-    if (method !== 'cash') {
-      setCardType(method);
-    }
-  };
-  
-  const handleTabChange = (value: string) => {
-    setPaymentTab(value);
-    if (value === 'cash') {
-      handleSelectPayment('cash', null);
-    } else if (value === 'card' && savedCard) {
-      // If returning to card tab with a saved card
-      handleSelectPayment(savedCard.type, {
-        number: savedCard.number,
-        name: savedCard.name,
-        expiryDate: savedCard.expiryDate
-      });
-    } else if (value === 'card') {
-      // If returning to card tab without a saved card
-      handleSelectPayment(cardType, formValid ? cardDetails : null);
-    }
-  };
-  
-  // Função para lidar com seleção de cartão salvo
-  const handleSavedCardSelect = (card: SavedCard) => {
-    setSavedCard(card);
-    // Selecionar automaticamente o cartão para pagamento
-    handleSelectPayment(card.type, {
-      number: card.number,
-      name: card.name,
-      expiryDate: card.expiryDate
-    });
-    // Mostrar feedback ao usuário
-    toast.success(`Cartão ${card.name} selecionado para pagamento`);
-  };
-  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setCardDetails({
-      ...cardDetails,
-      [id]: value
-    });
-  };
-  
-  const handleTypeChange = (value: string) => {
-    const paymentMethod = value as PaymentMethod;
-    setCardType(paymentMethod);
+  }, [user]);
+
+  const fetchSavedCards = async () => {
+    if (!user) return;
     
-    // Only update selected payment if we have valid card details
-    if (formValid) {
-      handleSelectPayment(paymentMethod, cardDetails);
+    try {
+      const { data, error } = await supabase
+        .from('payment_methods')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setSavedCards(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar cartões:', error);
     }
   };
-  
+
+  const handlePaymentMethodChange = (method: PaymentMethod) => {
+    setPaymentMethod(method);
+    
+    if (method === 'cash' || method === 'pix') {
+      onPaymentSelect({ method });
+    } else if (selectedCard) {
+      const card = savedCards.find(c => c.id === selectedCard);
+      if (card) {
+        onPaymentSelect({
+          method,
+          cardNumber: card.card_number,
+          cardName: card.card_name,
+          expiryDate: card.expiry_date
+        });
+      }
+    }
+  };
+
+  const handleCardDataChange = (field: string, value: string) => {
+    const newCardData = { ...cardData, [field]: value };
+    setCardData(newCardData);
+    
+    // Auto-select payment if form is valid
+    if (newCardData.number && newCardData.name && newCardData.expiryDate && newCardData.cvv) {
+      onPaymentSelect({
+        method: paymentMethod,
+        ...newCardData
+      });
+    }
+  };
+
+  const handleSavedCardSelect = (cardId: string) => {
+    setSelectedCard(cardId);
+    const card = savedCards.find(c => c.id === cardId);
+    if (card) {
+      onPaymentSelect({
+        method: card.type as PaymentMethod,
+        cardNumber: card.card_number,
+        cardName: card.card_name,
+        expiryDate: card.expiry_date
+      });
+      setPaymentMethod(card.type as PaymentMethod);
+    }
+  };
+
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg">Forma de Pagamento</CardTitle>
+      <CardHeader>
+        <CardTitle>Forma de Pagamento</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="card" value={paymentTab} onValueChange={handleTabChange}>
-          <TabsList className="grid grid-cols-2 mb-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="card">Cartão</TabsTrigger>
-            <TabsTrigger value="cash">Dinheiro</TabsTrigger>
+            <TabsTrigger value="other">Outros</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="card">
-            {isLoggedIn ? (
-              <>
-                <PaymentCardManager 
-                  onCardSelect={handleSavedCardSelect}
-                  selectedCardId={savedCard?.id}
-                />
-                
-                {!savedCard && (
-                  <>
-                    <div className="my-4">
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-background px-2 text-muted-foreground">
-                            ou adicione um cartão temporário
-                          </span>
-                        </div>
+
+          <TabsContent value="card" className="space-y-4">
+            {savedCards.length > 0 && (
+              <div className="space-y-2">
+                <Label>Cartões Salvos</Label>
+                {savedCards.map((card) => (
+                  <div
+                    key={card.id}
+                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                      selectedCard === card.id ? 'border-primary bg-primary/5' : 'border-border'
+                    }`}
+                    onClick={() => handleSavedCardSelect(card.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <CreditCard size={16} />
+                        <span className="font-medium">**** {card.card_number.slice(-4)}</span>
+                        <span className="text-sm text-muted-foreground">{card.card_name}</span>
                       </div>
+                      <span className="text-sm text-muted-foreground">{card.expiry_date}</span>
                     </div>
-                    
-                    <div className="space-y-4">
-                      <RadioGroup 
-                        defaultValue={cardType} 
-                        value={cardType}
-                        onValueChange={handleTypeChange} 
-                        className="flex space-x-4 space-y-0"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="credit" id="credit" />
-                          <Label htmlFor="credit" className="cursor-pointer">Crédito</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="debit" id="debit" />
-                          <Label htmlFor="debit" className="cursor-pointer">Débito</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="meal" id="meal" />
-                          <Label htmlFor="meal" className="cursor-pointer">Vale Refeição</Label>
-                        </div>
-                      </RadioGroup>
-                      
-                      <div className="grid gap-3">
-                        <div>
-                          <Label htmlFor="number">Número do Cartão</Label>
-                          <Input 
-                            id="number" 
-                            placeholder="1234 5678 9012 3456" 
-                            value={cardDetails.number}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="name">Nome no Cartão</Label>
-                          <Input 
-                            id="name" 
-                            placeholder="NOME COMO ESTÁ NO CARTÃO" 
-                            value={cardDetails.name}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label htmlFor="expiryDate">Validade</Label>
-                            <Input 
-                              id="expiryDate" 
-                              placeholder="MM/AA" 
-                              value={cardDetails.expiryDate}
-                              onChange={handleInputChange}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="cvv">CVV</Label>
-                            <Input 
-                              id="cvv" 
-                              placeholder="123" 
-                              value={cardDetails.cvv}
-                              onChange={handleInputChange}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {!formValid && (
-                      <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800 flex items-start gap-2">
-                        <AlertCircle className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
-                        <span>Por favor, preencha todos os dados do cartão corretamente</span>
-                      </div>
-                    )}
-                  </>
-                )}
-              </>
-            ) : (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-                <Wallet className="h-10 w-10 text-yellow-500 mx-auto mb-2" />
-                <h3 className="font-medium text-lg mb-1">Faça login primeiro</h3>
-                <p className="text-sm text-yellow-800 mb-2">
-                  Você precisa estar logado para usar cartões de pagamento.
-                </p>
-                <Button
-                  onClick={() => navigate('/login')}
-                  className="bg-red-600 hover:bg-red-700 text-white"
-                >
-                  Fazer Login
-                </Button>
+                  </div>
+                ))}
               </div>
             )}
+
+            <div className="space-y-4">
+              <Label>Novo Cartão</Label>
+              
+              <RadioGroup 
+                value={paymentMethod} 
+                onValueChange={(value) => handlePaymentMethodChange(value as PaymentMethod)}
+                className="flex space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="credit" id="credit" />
+                  <Label htmlFor="credit">Crédito</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="debit" id="debit" />
+                  <Label htmlFor="debit">Débito</Label>
+                </div>
+              </RadioGroup>
+
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <Label htmlFor="cardNumber">Número do Cartão</Label>
+                  <Input
+                    id="cardNumber"
+                    placeholder="0000 0000 0000 0000"
+                    value={cardData.number}
+                    onChange={(e) => handleCardDataChange('number', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="cardName">Nome no Cartão</Label>
+                  <Input
+                    id="cardName"
+                    placeholder="Nome completo"
+                    value={cardData.name}
+                    onChange={(e) => handleCardDataChange('name', e.target.value)}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="expiryDate">Validade</Label>
+                    <Input
+                      id="expiryDate"
+                      placeholder="MM/AA"
+                      value={cardData.expiryDate}
+                      onChange={(e) => handleCardDataChange('expiryDate', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="cvv">CVV</Label>
+                    <Input
+                      id="cvv"
+                      placeholder="000"
+                      value={cardData.cvv}
+                      onChange={(e) => handleCardDataChange('cvv', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </TabsContent>
-          
-          <TabsContent value="cash">
-            <div className="p-6 text-center space-y-3">
-              <CreditCard size={48} className="mx-auto text-gray-400" />
-              <div>
-                <h3 className="font-medium text-lg">Pagamento na Entrega</h3>
-                <p className="text-gray-500 text-sm mt-1">
-                  Você pagará diretamente ao entregador quando receber o pedido. 
-                  Tenha o valor exato em mãos, se possível.
-                </p>
+
+          <TabsContent value="other" className="space-y-4">
+            <div 
+              className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                paymentMethod === 'pix' ? 'border-primary bg-primary/5' : 'border-border'
+              }`}
+              onClick={() => handlePaymentMethodChange('pix')}
+            >
+              <div className="flex items-center space-x-3">
+                <Smartphone className="text-primary" size={20} />
+                <div>
+                  <div className="font-medium">PIX</div>
+                  <div className="text-sm text-muted-foreground">Pagamento instantâneo</div>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                paymentMethod === 'cash' ? 'border-primary bg-primary/5' : 'border-border'
+              }`}
+              onClick={() => handlePaymentMethodChange('cash')}
+            >
+              <div className="flex items-center space-x-3">
+                <Banknote className="text-primary" size={20} />
+                <div>
+                  <div className="font-medium">Dinheiro</div>
+                  <div className="text-sm text-muted-foreground">Pagamento na entrega</div>
+                </div>
               </div>
             </div>
           </TabsContent>

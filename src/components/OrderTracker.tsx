@@ -4,7 +4,7 @@ import { CheckCircle2, Clock, PackageCheck, TruckIcon } from 'lucide-react';
 import { DeliveryMap } from './DeliveryMap';
 
 export interface OrderTrackerProps {
-  status: 'preparing' | 'ready' | 'delivering' | 'delivered';
+  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivering' | 'delivered';
   estimatedDelivery?: string;
   address?: string;
 }
@@ -12,6 +12,8 @@ export interface OrderTrackerProps {
 export const OrderTracker: React.FC<OrderTrackerProps> = ({ status, estimatedDelivery, address }) => {
   // Define the steps for the order process
   const steps = [
+    { key: 'pending', label: 'Pedido Recebido' },
+    { key: 'confirmed', label: 'Confirmado' },
     { key: 'preparing', label: 'Preparando' },
     { key: 'ready', label: 'Pronto para entrega' },
     { key: 'delivering', label: 'A caminho' },
@@ -38,10 +40,12 @@ export const OrderTracker: React.FC<OrderTrackerProps> = ({ status, estimatedDel
                     : 'bg-gray-200 text-gray-400'
                 }`}
               >
-                {index === 0 && <Clock className="w-5 h-5" />}
-                {index === 1 && <PackageCheck className="w-5 h-5" />}
-                {index === 2 && <TruckIcon className="w-5 h-5" />}
-                {index === 3 && <CheckCircle2 className="w-5 h-5" />}
+               {index === 0 && <Clock className="w-5 h-5" />}
+                {index === 1 && <Clock className="w-5 h-5" />}
+                {index === 2 && <PackageCheck className="w-5 h-5" />}
+                {index === 3 && <PackageCheck className="w-5 h-5" />}
+                {index === 4 && <TruckIcon className="w-5 h-5" />}
+                {index === 5 && <CheckCircle2 className="w-5 h-5" />}
               </div>
               <span className="text-xs text-center mt-1 font-medium">{step.label}</span>
             </div>

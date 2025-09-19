@@ -48,14 +48,14 @@ const OrderDetails: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center">
-                  <OrderStatusIcon status={order.status} />
-                  <span className="ml-2 font-medium">{getStatusText(order.status)}</span>
+                  <OrderStatusIcon status={order.status === 'pending' || order.status === 'confirmed' ? 'preparing' : order.status} />
+                  <span className="ml-2 font-medium">{getStatusText(order.status === 'pending' || order.status === 'confirmed' ? 'preparing' : order.status)}</span>
                 </div>
               </div>
               
               <div className="p-4">
                 <OrderTracker 
-                  status={order.status} 
+                  status={order.status === 'pending' || order.status === 'confirmed' ? 'preparing' : order.status} 
                   estimatedDelivery={order.estimatedDelivery}
                   address={order.address}
                 />
