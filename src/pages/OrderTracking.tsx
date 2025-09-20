@@ -19,6 +19,7 @@ interface OrderData {
   delivery_address_id: string;
   status: string;
   created_at: string;
+  rating?: number;
 }
 
 type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivering' | 'delivered';
@@ -117,6 +118,12 @@ const OrderTracking: React.FC = () => {
       if (error) throw error;
 
       setOrderData(orderData as OrderData);
+
+      // Check if already rated
+      if (orderData.rating) {
+        setHasRated(true);
+        setRating(orderData.rating);
+      }
 
       // Fetch restaurant data
       if (orderData.restaurant_id) {
@@ -460,8 +467,8 @@ const OrderTracking: React.FC = () => {
                         Obrigado pela sua avaliação!
                       </p>
                     </CardContent>
-                  </CardContent>
-                </Card>
+                  </Card>
+                )}
               </div>
             </div>
           </div>

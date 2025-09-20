@@ -156,6 +156,7 @@ export type Database = {
           items: Json
           notes: string | null
           payment_method: string | null
+          rating: number | null
           restaurant_id: string
           status: string
           subtotal: number
@@ -171,6 +172,7 @@ export type Database = {
           items: Json
           notes?: string | null
           payment_method?: string | null
+          rating?: number | null
           restaurant_id: string
           status?: string
           subtotal: number
@@ -186,6 +188,7 @@ export type Database = {
           items?: Json
           notes?: string | null
           payment_method?: string | null
+          rating?: number | null
           restaurant_id?: string
           status?: string
           subtotal?: number

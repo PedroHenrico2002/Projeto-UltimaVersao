@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Clock, MapPin, Star, ShoppingBag } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { OrderStatusIcon, getStatusText } from '@/components/order/OrderStatusIcon';
+import OrderStatusIcon, { getStatusText } from '@/components/order/OrderStatusIcon';
 import { toast } from '@/lib/toast';
 
 interface Order {
@@ -61,7 +61,13 @@ const Orders: React.FC = () => {
 
       if (error) throw error;
 
-      setOrders(ordersData || []);
+      const formattedOrders = (ordersData || []).map((order: any) => ({
+        ...order,
+        items: Array.isArray(order.items) ? order.items : [],
+        restaurant: order.restaurants || null
+      }));
+
+      setOrders(formattedOrders);
     } catch (error) {
       console.error('Erro ao buscar pedidos:', error);
       toast.error('Erro ao carregar histórico de pedidos');
