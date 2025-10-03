@@ -24,6 +24,7 @@ import Cart from "@/pages/Cart";
 import Checkout from "@/pages/Checkout";
 import ConfirmOrder from "@/pages/ConfirmOrder";
 import OrderComplete from "@/pages/OrderComplete";
+import OrderConfirmation from "@/pages/OrderConfirmation";
 import OrderTracking from "@/pages/OrderTracking";
 import OrderDetails from "@/pages/OrderDetails";
 import Orders from "@/pages/Orders";
@@ -70,6 +71,7 @@ const App = () => {
             <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
             <Route path="/confirm-order" element={<ProtectedRoute><ConfirmOrder /></ProtectedRoute>} />
             <Route path="/order-complete" element={<ProtectedRoute><OrderComplete /></ProtectedRoute>} />
+            <Route path="/order-confirmation" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
             <Route path="/order-tracking" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
             <Route path="/order-details" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
             <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
