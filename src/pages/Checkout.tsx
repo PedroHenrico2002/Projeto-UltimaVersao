@@ -22,13 +22,16 @@ interface PaymentData {
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { items, getTotalPrice, clearCart, getRestaurantId } = useCart();
+  const { items, isLoading: cartLoading, getTotalPrice, clearCart, getRestaurantId } = useCart();
   const [loading, setLoading] = useState(false);
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
   const [userAddress, setUserAddress] = useState<any>(null);
   const [restaurant, setRestaurant] = useState<any>(null);
 
   useEffect(() => {
+    // Wait for cart to finish loading before checking
+    if (cartLoading) return;
+    
     if (items.length === 0) {
       toast.error('Carrinho vazio');
       navigate('/cart');
@@ -43,7 +46,7 @@ const Checkout: React.FC = () => {
 
     fetchUserData();
     fetchRestaurantData();
-  }, [items, navigate, user]);
+  }, [items, cartLoading, navigate, user]);
 
   const fetchUserData = async () => {
     if (!user) return;
@@ -160,7 +163,7 @@ const Checkout: React.FC = () => {
   const deliveryFee = restaurant?.delivery_fee || 5.99;
   const total = subtotal + deliveryFee;
 
-  if (!user || items.length === 0) {
+  if (cartLoading || !user || items.length === 0) {
     return (
       <Layout>
         <div className="pt-20 pb-16">
