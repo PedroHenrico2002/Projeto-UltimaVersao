@@ -142,15 +142,22 @@ const Checkout: React.FC = () => {
       };
 
       const order = await orderService.create(orderData);
+      console.log('Pedido criado:', order);
+      console.log('Order ID:', order.id);
       
       clearCart();
       
       toast.success('Pedido realizado com sucesso!');
+      
+      // Navigate to order confirmation with order ID
       navigate('/order-confirmation', { 
         state: { 
           orderId: order.id
-        } 
+        },
+        replace: true
       });
+      
+      console.log('Navegando para order-confirmation com orderId:', order.id);
     } catch (error) {
       console.error('Erro ao finalizar pedido:', error);
       toast.error('Erro ao finalizar pedido. Tente novamente.');

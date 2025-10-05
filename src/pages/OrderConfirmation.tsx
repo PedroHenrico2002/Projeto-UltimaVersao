@@ -36,6 +36,9 @@ const OrderConfirmation: React.FC = () => {
 
   const orderId = location.state?.orderId;
 
+  console.log('OrderConfirmation - location.state:', location.state);
+  console.log('OrderConfirmation - orderId:', orderId);
+
   const steps = [
     { 
       key: 'pending', 
@@ -76,9 +79,18 @@ const OrderConfirmation: React.FC = () => {
   ];
 
   useEffect(() => {
+    console.log('OrderConfirmation useEffect - orderId:', orderId);
+    console.log('OrderConfirmation useEffect - user:', user);
+    
     if (!orderId) {
+      console.error('ID do pedido não encontrado no location.state');
       toast.error('ID do pedido não encontrado');
       navigate('/orders');
+      return;
+    }
+
+    if (!user) {
+      console.error('Usuário não autenticado');
       return;
     }
 
