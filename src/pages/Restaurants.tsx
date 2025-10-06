@@ -47,6 +47,30 @@ const Restaurants: React.FC = () => {
   const displayedRestaurants = React.useMemo(() => {
     let filtered = restaurants;
     
+    // Apply category filter from URL parameter
+    if (categoryParam) {
+      if (categoryParam === 'desserts') {
+        // Filter dessert restaurants
+        filtered = filtered.filter((restaurant) =>
+          restaurant.cuisine.toLowerCase().includes('doce') ||
+          restaurant.cuisine.toLowerCase().includes('sorvete') ||
+          restaurant.cuisine.toLowerCase().includes('açaí') ||
+          restaurant.cuisine.toLowerCase().includes('confeitaria') ||
+          restaurant.cuisine.toLowerCase().includes('gelato') ||
+          restaurant.name.toLowerCase().includes('doce')
+        );
+      } else if (categoryParam === 'restaurants') {
+        // Filter main restaurants (exclude desserts)
+        filtered = filtered.filter((restaurant) =>
+          !restaurant.cuisine.toLowerCase().includes('doce') &&
+          !restaurant.cuisine.toLowerCase().includes('sorvete') &&
+          !restaurant.cuisine.toLowerCase().includes('açaí') &&
+          !restaurant.cuisine.toLowerCase().includes('confeitaria') &&
+          !restaurant.cuisine.toLowerCase().includes('gelato')
+        );
+      }
+    }
+    
     // Apply search filter
     if (searchQuery) {
       filtered = filtered.filter((restaurant) => 
@@ -66,7 +90,7 @@ const Restaurants: React.FC = () => {
     });
     
     return sorted;
-  }, [restaurants, searchQuery, sortOption]);
+  }, [restaurants, searchQuery, sortOption, categoryParam]);
 
   if (loading) {
     return (
@@ -132,7 +156,9 @@ const Restaurants: React.FC = () => {
           
           {/* Restaurant Section */}
           <section className="mb-10">
-            <h2 className="text-xl font-bold mb-6">Restaurantes</h2>
+            <h2 className="text-xl font-bold mb-6">
+              {categoryParam === 'desserts' ? 'Sobremesas' : categoryParam === 'restaurants' ? 'Restaurantes' : 'Todos os Restaurantes'}
+            </h2>
             
             <div className="grid grid-cols-1 gap-4">
               {displayedRestaurants.length > 0 ? (
