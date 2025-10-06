@@ -206,7 +206,7 @@ const Index: React.FC = () => {
           <section>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">Sobremesa</h2>
-              <Link to="/restaurants?category=desserts" className="text-sm text-red-600">
+              <Link to="/restaurants" className="text-sm text-red-600">
                 Ver todos
               </Link>
             </div>
