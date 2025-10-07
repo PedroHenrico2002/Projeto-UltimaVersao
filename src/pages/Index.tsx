@@ -3,7 +3,8 @@ import { Layout } from '@/components/Layout';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { profileService } from '@/services/supabaseService';
+import { profileService, restaurantService } from '@/services/supabaseService';
+import { Clock, Star } from 'lucide-react';
 
 // Categorias
 const categories = [
@@ -33,81 +34,12 @@ const categories = [
   }
 ];
 
-// Restaurantes principais
-const mainRestaurants = [
-  {
-    id: '2',
-    name: 'Restaurante Japonês',
-    image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    cuisine: 'Japonesa',
-    rating: 4.9,
-    deliveryTime: '30-45 min',
-    minOrder: 'R$25,00',
-  },
-  {
-    id: '3',
-    name: 'Churrascaria Gaúcha',
-    image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    cuisine: 'Churrasco',
-    rating: 4.7,
-    deliveryTime: '35-50 min',
-    minOrder: 'R$30,00',
-  },
-  {
-    id: '4',
-    name: 'Comida Caseira',
-    image: 'https://images.unsplash.com/photo-1547928576-f8d1c7a1b709?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    cuisine: 'Brasileira',
-    rating: 4.5,
-    deliveryTime: '20-35 min',
-    minOrder: 'R$12,90',
-  },
-];
-
-// Restaurantes de sobremesa
-const dessertRestaurants = [
-  {
-    id: '1',
-    name: 'Doce Paixão',
-    image: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
-    cuisine: 'Doces e Bolos',
-    rating: 4.9,
-    deliveryTime: '20-35 min',
-    minOrder: 'R$5,90',
-    featured: true,
-  },
-  {
-    id: '7',
-    name: 'Confeitaria Doce Sonho',
-    image: 'https://images.unsplash.com/photo-1574085733277-851d9d856a3a?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
-    cuisine: 'Doces e Confeitaria',
-    rating: 4.8,
-    deliveryTime: '25-40 min',
-    minOrder: 'R$7,50',
-  },
-  {
-    id: '6',
-    name: 'Gelato Italiano',
-    image: 'https://images.unsplash.com/photo-1501443762994-82bd5dace89a?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
-    cuisine: 'Sorvetes e Gelatos',
-    rating: 4.6,
-    deliveryTime: '15-30 min',
-    minOrder: 'R$6,50',
-  },
-  {
-    id: '8',
-    name: 'Açaí Tropical',
-    image: 'https://images.unsplash.com/photo-1502825751399-28baa9b81995?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80',
-    cuisine: 'Açaí e Smoothies',
-    rating: 4.7,
-    deliveryTime: '20-35 min',
-    minOrder: 'R$5,50',
-  },
-];
 
 const Index: React.FC = () => {
   const { user, loading } = useAuth();
   const [userName, setUserName] = useState('');
+  const [restaurants, setRestaurants] = useState<any[]>([]);
+  const [loadingRestaurants, setLoadingRestaurants] = useState(true);
   
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -124,6 +56,22 @@ const Index: React.FC = () => {
 
     fetchUserProfile();
   }, [user]);
+
+  useEffect(() => {
+    const fetchRestaurants = async () => {
+      try {
+        setLoadingRestaurants(true);
+        const data = await restaurantService.getAll();
+        setRestaurants(data);
+      } catch (error) {
+        console.error('Erro ao carregar restaurantes:', error);
+      } finally {
+        setLoadingRestaurants(false);
+      }
+    };
+
+    fetchRestaurants();
+  }, []);
 
   return (
     <Layout>
@@ -165,79 +113,56 @@ const Index: React.FC = () => {
           </div>
           
           {/* Restaurants Section */}
-          <section className="mb-10">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold">Restaurantes</h2>
-              <Link to="/restaurants" className="text-sm text-red-600">
-                Ver todos
-              </Link>
-            </div>
-            
-            <div className="grid grid-cols-1 gap-4">
-              {mainRestaurants.slice(0, 2).map((restaurant) => (
-                <Link key={restaurant.id} to={`/restaurants/${restaurant.id}`} className="block">
-                  <div className="flex items-center border rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow">
-                    <div className="w-20 h-20 bg-gray-200">
-                      <img 
-                        src={restaurant.image} 
-                        alt={restaurant.name} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 p-3">
-                      <h3 className="font-medium">{restaurant.name}</h3>
-                      <p className="text-xs text-gray-500">{restaurant.cuisine}</p>
-                      <div className="flex items-center text-yellow-500 text-sm">
-                        <span className="mr-1">★</span>
-                        <span>{restaurant.rating}</span>
-                      </div>
-                      <div className="flex justify-between text-sm text-gray-500 mt-1">
-                        <span>{restaurant.deliveryTime}</span>
-                        <span>{restaurant.minOrder}</span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-          
-          {/* Sobremesa Section */}
           <section>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold">Sobremesa</h2>
-              <Link to="/restaurants" className="text-sm text-red-600">
+              <h2 className="text-xl font-bold">Restaurantes</h2>
+              <Link to="/restaurants" className="text-sm text-primary hover:underline">
                 Ver todos
               </Link>
             </div>
             
-            <div className="grid grid-cols-1 gap-4">
-              {dessertRestaurants.slice(0, 2).map((restaurant) => (
-                <Link key={restaurant.id} to={`/restaurants/${restaurant.id}`} className="block">
-                  <div className="flex items-center border rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow">
-                    <div className="w-20 h-20 bg-gray-200">
-                      <img 
-                        src={restaurant.image} 
-                        alt={restaurant.name} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 p-3">
-                      <h3 className="font-medium">{restaurant.name}</h3>
-                      <p className="text-xs text-gray-500">{restaurant.cuisine}</p>
-                      <div className="flex items-center text-yellow-500 text-sm">
-                        <span className="mr-1">★</span>
-                        <span>{restaurant.rating}</span>
+            {loadingRestaurants ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Carregando restaurantes...</p>
+              </div>
+            ) : restaurants.length === 0 ? (
+              <div className="text-center py-8 glass-effect rounded-lg">
+                <p className="text-muted-foreground">Nenhum restaurante disponível no momento</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {restaurants.slice(0, 4).map((restaurant) => (
+                  <Link key={restaurant.id} to={`/restaurants/${restaurant.id}`} className="block">
+                    <div className="flex items-center border border-border rounded-lg overflow-hidden bg-card hover:shadow-md hover:border-primary/30 transition-all">
+                      <div className="w-24 h-24 bg-muted flex-shrink-0">
+                        <img 
+                          src={restaurant.image_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'} 
+                          alt={restaurant.name} 
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-                      <div className="flex justify-between text-sm text-gray-500 mt-1">
-                        <span>{restaurant.deliveryTime}</span>
-                        <span>{restaurant.minOrder}</span>
+                      <div className="flex-1 p-4 min-w-0">
+                        <h3 className="font-semibold text-base mb-1 truncate">{restaurant.name}</h3>
+                        <p className="text-sm text-muted-foreground mb-2">{restaurant.cuisine}</p>
+                        <div className="flex items-center gap-4 text-sm">
+                          <div className="flex items-center text-yellow-500">
+                            <Star className="h-4 w-4 fill-current mr-1" />
+                            <span className="font-medium">{restaurant.rating || 0}</span>
+                          </div>
+                          <div className="flex items-center text-muted-foreground">
+                            <Clock className="h-4 w-4 mr-1" />
+                            <span>{restaurant.delivery_time}</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Pedido mín: R$ {restaurant.min_order?.toFixed(2) || '0.00'}
+                        </p>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </section>
         </div>
       </div>

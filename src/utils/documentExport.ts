@@ -334,7 +334,7 @@ export const exportToWord = async () => {
 
   // Generate and save document
   const buffer = await Packer.toBuffer(doc);
-  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+  const blob = new Blob([new Uint8Array(buffer)], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
   saveAs(blob, "documentacao-be-legendary.docx");
 
   return true;
