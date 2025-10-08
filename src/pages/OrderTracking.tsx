@@ -8,7 +8,6 @@ import { Clock, MapPin, Phone, ChevronLeft, ShoppingBag, Star } from 'lucide-rea
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
-
 interface OrderData {
   id: string;
   items: any[];
@@ -21,13 +20,13 @@ interface OrderData {
   created_at: string;
   rating?: number;
 }
-
 type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivering' | 'delivered';
-
 const OrderTracking: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [restaurant, setRestaurant] = useState<any>(null);
   const [address, setAddress] = useState<any>(null);
@@ -36,36 +35,30 @@ const OrderTracking: React.FC = () => {
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [hasRated, setHasRated] = useState(false);
   const [showRating, setShowRating] = useState(false);
-
   const orderId = location.state?.orderId;
-
   useEffect(() => {
     if (!orderId) {
       toast.error('ID do pedido não encontrado');
       navigate('/orders');
       return;
     }
-
     let interval: NodeJS.Timeout | undefined;
-
     const initializeOrderTracking = async () => {
       const initialOrder = await fetchOrderData();
-      
+
       // Only simulate progression if order is not delivered yet
       if (initialOrder && initialOrder.status !== 'delivered') {
         const progressSteps = ['pending', 'confirmed', 'preparing', 'ready', 'delivering', 'delivered'];
         let currentStep = progressSteps.indexOf(initialOrder.status);
         if (currentStep === -1) currentStep = 0;
-
         const updateStatus = async () => {
           if (currentStep < progressSteps.length - 1) {
             currentStep++;
             try {
-              await supabase
-                .from('orders')
-                .update({ status: progressSteps[currentStep] })
-                .eq('id', orderId);
-                
+              await supabase.from('orders').update({
+                status: progressSteps[currentStep]
+              }).eq('id', orderId);
+
               // Stop when delivered
               if (progressSteps[currentStep] === 'delivered' && interval) {
                 clearInterval(interval);
@@ -82,52 +75,37 @@ const OrderTracking: React.FC = () => {
         interval = setInterval(updateStatus, 2000);
       }
     };
-
     initializeOrderTracking();
-    
-    // Set up real-time updates
-    const subscription = supabase
-      .channel('order-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'orders',
-          filter: `id=eq.${orderId}`
-        },
-        (payload) => {
-          const newOrder = payload.new as OrderData;
-          setOrderData(newOrder);
-          
-          // Show rating when order is delivered
-          if (newOrder.status === 'delivered' && !hasRated) {
-            setShowRating(true);
-            if (interval) clearInterval(interval);
-          }
-        }
-      )
-      .subscribe();
 
+    // Set up real-time updates
+    const subscription = supabase.channel('order-updates').on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'orders',
+      filter: `id=eq.${orderId}`
+    }, payload => {
+      const newOrder = payload.new as OrderData;
+      setOrderData(newOrder);
+
+      // Show rating when order is delivered
+      if (newOrder.status === 'delivered' && !hasRated) {
+        setShowRating(true);
+        if (interval) clearInterval(interval);
+      }
+    }).subscribe();
     return () => {
       subscription.unsubscribe();
       if (interval) clearInterval(interval);
     };
   }, [orderId, navigate, hasRated]);
-
   const fetchOrderData = async () => {
     if (!user) return null;
-
     try {
-      const { data: orderData, error } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', orderId)
-        .eq('user_id', user.id)
-        .single();
-
+      const {
+        data: orderData,
+        error
+      } = await supabase.from('orders').select('*').eq('id', orderId).eq('user_id', user.id).single();
       if (error) throw error;
-
       setOrderData(orderData as OrderData);
 
       // Check if already rated
@@ -143,12 +121,9 @@ const OrderTracking: React.FC = () => {
 
       // Fetch restaurant data
       if (orderData.restaurant_id) {
-        const { data: restaurantData } = await supabase
-          .from('restaurants')
-          .select('*')
-          .eq('id', orderData.restaurant_id)
-          .single();
-
+        const {
+          data: restaurantData
+        } = await supabase.from('restaurants').select('*').eq('id', orderData.restaurant_id).single();
         if (restaurantData) {
           setRestaurant(restaurantData);
         }
@@ -156,17 +131,13 @@ const OrderTracking: React.FC = () => {
 
       // Fetch address data
       if (orderData.delivery_address_id) {
-        const { data: addressData } = await supabase
-          .from('addresses')
-          .select('*')
-          .eq('id', orderData.delivery_address_id)
-          .single();
-
+        const {
+          data: addressData
+        } = await supabase.from('addresses').select('*').eq('id', orderData.delivery_address_id).single();
         if (addressData) {
           setAddress(addressData);
         }
       }
-
       return orderData as OrderData;
     } catch (error) {
       console.error('Erro ao buscar dados do pedido:', error);
@@ -177,7 +148,6 @@ const OrderTracking: React.FC = () => {
       setLoading(false);
     }
   };
-
   const getStatusMessage = (status: string) => {
     switch (status) {
       case 'pending':
@@ -196,7 +166,6 @@ const OrderTracking: React.FC = () => {
         return 'Acompanhando seu pedido...';
     }
   };
-
   const getEstimatedTime = (status: string) => {
     switch (status) {
       case 'pending':
@@ -214,34 +183,25 @@ const OrderTracking: React.FC = () => {
         return '25-35 min';
     }
   };
-
   const handleRating = async (ratingValue: number) => {
     if (!orderData || !restaurant) return;
-
     try {
       // Update order with rating
-      await supabase
-        .from('orders')
-        .update({ rating: ratingValue })
-        .eq('id', orderData.id);
+      await supabase.from('orders').update({
+        rating: ratingValue
+      }).eq('id', orderData.id);
 
       // Update restaurant average rating (simplified)
-      const { data: orders } = await supabase
-        .from('orders')
-        .select('rating')
-        .eq('restaurant_id', restaurant.id)
-        .not('rating', 'is', null);
-
+      const {
+        data: orders
+      } = await supabase.from('orders').select('rating').eq('restaurant_id', restaurant.id).not('rating', 'is', null);
       if (orders) {
         const totalRating = orders.reduce((sum, order) => sum + (order.rating || 0), 0);
         const avgRating = totalRating / orders.length;
-
-        await supabase
-          .from('restaurants')
-          .update({ rating: avgRating })
-          .eq('id', restaurant.id);
+        await supabase.from('restaurants').update({
+          rating: avgRating
+        }).eq('id', restaurant.id);
       }
-
       setHasRated(true);
       setShowRating(false);
       toast.success('Avaliação enviada com sucesso!');
@@ -250,10 +210,8 @@ const OrderTracking: React.FC = () => {
       toast.error('Erro ao enviar avaliação');
     }
   };
-
   if (loading) {
-    return (
-      <Layout>
+    return <Layout>
         <div className="pt-20 pb-16">
           <div className="page-container">
             <div className="text-center">
@@ -261,13 +219,10 @@ const OrderTracking: React.FC = () => {
             </div>
           </div>
         </div>
-      </Layout>
-    );
+      </Layout>;
   }
-
   if (!orderData) {
-    return (
-      <Layout>
+    return <Layout>
         <div className="pt-20 pb-16">
           <div className="page-container">
             <div className="text-center">
@@ -278,23 +233,16 @@ const OrderTracking: React.FC = () => {
             </div>
           </div>
         </div>
-      </Layout>
-    );
+      </Layout>;
   }
-
   const orderNumber = `#${orderData.id.slice(-8).toUpperCase()}`;
   const currentStatus = orderData.status as OrderStatus;
   const estimatedTime = getEstimatedTime(currentStatus);
-
-  return (
-    <Layout>
+  return <Layout>
       <div className="pt-20 pb-16">
         <div className="page-container">
           <div className="mb-6">
-            <Link
-              to="/orders"
-              className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <Link to="/orders" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
               <ChevronLeft size={16} className="mr-1" />
               Voltar aos Pedidos
             </Link>
@@ -326,17 +274,12 @@ const OrderTracking: React.FC = () => {
                       </p>
                     </div>
 
-                    <OrderTracker 
-                      status={currentStatus === 'pending' || currentStatus === 'confirmed' ? 'preparing' : currentStatus}
-                      estimatedDelivery={estimatedTime}
-                      address={address ? `${address.street}, ${address.number} - ${address.city}` : ''}
-                    />
+                    <OrderTracker status={currentStatus === 'pending' || currentStatus === 'confirmed' ? 'preparing' : currentStatus} estimatedDelivery={estimatedTime} address={address ? `${address.street}, ${address.number} - ${address.city}` : ''} />
                   </CardContent>
                 </Card>
 
                 {/* Restaurant Info */}
-                {restaurant && (
-                  <Card>
+                {restaurant && <Card>
                     <CardHeader>
                       <CardTitle>Restaurante</CardTitle>
                     </CardHeader>
@@ -344,13 +287,7 @@ const OrderTracking: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <div className="w-12 h-12 bg-muted rounded-lg overflow-hidden">
-                            {restaurant.image_url && (
-                              <img 
-                                src={restaurant.image_url}
-                                alt={restaurant.name}
-                                className="w-full h-full object-cover"
-                              />
-                            )}
+                            {restaurant.image_url && <img src={restaurant.image_url} alt={restaurant.name} className="w-full h-full object-cover" />}
                           </div>
                           <div>
                             <h4 className="font-medium">{restaurant.name}</h4>
@@ -358,14 +295,10 @@ const OrderTracking: React.FC = () => {
                           </div>
                         </div>
                         
-                        <Button variant="outline" size="sm">
-                          <Phone size={16} className="mr-1" />
-                          Contato
-                        </Button>
+                        
                       </div>
                     </CardContent>
-                  </Card>
-                )}
+                  </Card>}
               </div>
 
               {/* Order Summary */}
@@ -379,12 +312,10 @@ const OrderTracking: React.FC = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-3">
-                      {orderData.items.map((item: any, index: number) => (
-                        <div key={index} className="flex justify-between text-sm">
+                      {orderData.items.map((item: any, index: number) => <div key={index} className="flex justify-between text-sm">
                           <span>{item.quantity}x {item.name}</span>
                           <span>R$ {(item.price * item.quantity).toFixed(2)}</span>
-                        </div>
-                      ))}
+                        </div>)}
                     </div>
 
                     <div className="border-t pt-3 space-y-2">
@@ -402,8 +333,7 @@ const OrderTracking: React.FC = () => {
                       </div>
                     </div>
 
-                    {address && (
-                      <div className="border-t pt-4">
+                    {address && <div className="border-t pt-4">
                         <div className="flex items-start space-x-2">
                           <MapPin size={16} className="text-muted-foreground mt-0.5" />
                           <div>
@@ -414,22 +344,16 @@ const OrderTracking: React.FC = () => {
                             </p>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      </div>}
 
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => navigate('/orders')}
-                    >
+                    <Button variant="outline" className="w-full" onClick={() => navigate('/orders')}>
                       Ver Todos os Pedidos
                     </Button>
                   </CardContent>
                 </Card>
 
                 {/* Rating Card */}
-                {showRating && currentStatus === 'delivered' && !hasRated && (
-                  <Card>
+                {showRating && currentStatus === 'delivered' && !hasRated && <Card>
                     <CardHeader>
                       <CardTitle>Avaliar Restaurante</CardTitle>
                     </CardHeader>
@@ -439,62 +363,30 @@ const OrderTracking: React.FC = () => {
                       </p>
                       
                       <div className="flex justify-center space-x-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            size={32}
-                            className={`cursor-pointer transition-colors ${
-                              (hoverRating || rating) >= star
-                                ? 'text-yellow-400 fill-yellow-400'
-                                : 'text-gray-300'
-                            }`}
-                            onClick={() => setRating(star)}
-                            onMouseEnter={() => setHoverRating(star)}
-                            onMouseLeave={() => setHoverRating(0)}
-                          />
-                        ))}
+                        {[1, 2, 3, 4, 5].map(star => <Star key={star} size={32} className={`cursor-pointer transition-colors ${(hoverRating || rating) >= star ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} onClick={() => setRating(star)} onMouseEnter={() => setHoverRating(star)} onMouseLeave={() => setHoverRating(0)} />)}
                       </div>
                       
-                      <Button
-                        onClick={() => handleRating(rating)}
-                        disabled={rating === 0}
-                        className="w-full"
-                      >
+                      <Button onClick={() => handleRating(rating)} disabled={rating === 0} className="w-full">
                         Enviar Avaliação
                       </Button>
                     </CardContent>
-                  </Card>
-                )}
+                  </Card>}
 
-                {hasRated && (
-                  <Card>
+                {hasRated && <Card>
                     <CardContent className="text-center py-4">
                       <div className="flex justify-center space-x-1 mb-2">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            size={20}
-                            className={
-                              rating >= star
-                                ? 'text-yellow-400 fill-yellow-400'
-                                : 'text-gray-300'
-                            }
-                          />
-                        ))}
+                        {[1, 2, 3, 4, 5].map(star => <Star key={star} size={20} className={rating >= star ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'} />)}
                       </div>
                       <p className="text-sm text-muted-foreground">
                         Obrigado pela sua avaliação!
                       </p>
                     </CardContent>
-                  </Card>
-                )}
+                  </Card>}
               </div>
             </div>
           </div>
         </div>
       </div>
-    </Layout>
-  );
+    </Layout>;
 };
-
 export default OrderTracking;
