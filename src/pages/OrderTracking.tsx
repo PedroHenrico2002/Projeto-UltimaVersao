@@ -78,8 +78,8 @@ const OrderTracking: React.FC = () => {
           }
         };
 
-        // Update status every 5 seconds for demo purposes
-        interval = setInterval(updateStatus, 5000);
+        // Update status every 2 seconds (2.5x faster)
+        interval = setInterval(updateStatus, 2000);
       }
     };
 
