@@ -73,6 +73,33 @@ export type Database = {
           },
         ]
       }
+      auth_codes: {
+        Row: {
+          code: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          used: boolean
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          used?: boolean
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          used?: boolean
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -353,7 +380,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_expired_auth_codes: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
