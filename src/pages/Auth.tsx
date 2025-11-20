@@ -5,22 +5,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 export const Auth: React.FC = () => {
   const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
-  const [codeSent, setCodeSent] = useState(false);
   
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from?.pathname || '/';
 
-  const handleSendCode = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !email.includes('@')) {
@@ -28,28 +28,47 @@ export const Auth: React.FC = () => {
       return;
     }
 
+    if (!password || password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    if (!name || name.trim().length === 0) {
+      setError('Por favor, insira seu nome');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      const { data, error } = await supabase.functions.invoke('send-auth-code', {
-        body: { email }
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            name: name.trim()
+          }
+        }
       });
 
-      if (error) {
-        throw error;
-      }
+      if (signUpError) throw signUpError;
 
-      setCodeSent(true);
       toast({
-        title: "Código enviado!",
-        description: "Verifique seu email para obter o código de autenticação.",
+        title: "Conta criada com sucesso!",
+        description: "Você será redirecionado em instantes.",
       });
+      
+      // Aguardar um pouco para garantir que o perfil foi criado
+      setTimeout(() => {
+        navigate(from);
+      }, 1000);
     } catch (error: any) {
-      console.error('Erro ao enviar código:', error);
-      setError(error.message || 'Erro ao enviar código. Tente novamente.');
+      console.error('Erro ao criar conta:', error);
+      setError(error.message || 'Erro ao criar conta. Tente novamente.');
       toast({
-        title: "Erro ao enviar código",
+        title: "Erro ao criar conta",
         description: error.message || 'Tente novamente em alguns instantes.',
         variant: "destructive",
       });
@@ -58,11 +77,16 @@ export const Auth: React.FC = () => {
     }
   };
 
-  const handleVerifyCode = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!code || code.length !== 6) {
-      setError('Por favor, insira o código de 6 dígitos');
+    if (!email || !email.includes('@')) {
+      setError('Por favor, insira um email válido');
+      return;
+    }
+
+    if (!password) {
+      setError('Por favor, insira sua senha');
       return;
     }
 
@@ -70,73 +94,38 @@ export const Auth: React.FC = () => {
     setError('');
 
     try {
-      const { data, error } = await supabase.functions.invoke('verify-auth-code', {
-        body: { email, code }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      // Usar as propriedades retornadas para fazer login
-      const { properties } = data.session;
-      
-      // Fazer login usando o hashed_token
-      const { error: signInError } = await supabase.auth.verifyOtp({
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
-        token: properties.hashed_token,
-        type: 'magiclink'
+        password,
       });
 
-      if (signInError) {
-        // Tentar método alternativo: setSession
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: properties.access_token,
-          refresh_token: properties.refresh_token
-        });
-
-        if (sessionError) {
-          throw sessionError;
-        }
-      }
+      if (signInError) throw signInError;
 
       toast({
-        title: data.isNewUser ? "Conta criada com sucesso!" : "Login realizado com sucesso!",
-        description: data.isNewUser ? "Bem-vindo!" : "Bem-vindo de volta!",
+        title: "Login realizado com sucesso!",
+        description: "Bem-vindo de volta!",
       });
       
       navigate(from);
     } catch (error: any) {
-      console.error('Erro ao verificar código:', error);
+      console.error('Erro ao fazer login:', error);
       
-      if (error.message.includes('inválido')) {
-        setError('Código inválido. Verifique e tente novamente.');
-      } else if (error.message.includes('expirado')) {
-        setError('Código expirado. Solicite um novo código.');
-        setCodeSent(false);
-        setCode('');
+      if (error.message.includes('Invalid login credentials')) {
+        setError('Email ou senha incorretos');
       } else {
-        setError(error.message || 'Erro ao verificar código. Tente novamente.');
+        setError(error.message || 'Erro ao fazer login. Tente novamente.');
       }
       
       toast({
-        title: "Erro na autenticação",
-        description: error.message || 'Tente novamente.',
+        title: "Erro no login",
+        description: error.message.includes('Invalid login credentials') 
+          ? 'Email ou senha incorretos' 
+          : 'Tente novamente.',
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleResendCode = () => {
-    setCode('');
-    setCodeSent(false);
-    setError('');
   };
 
   return (
@@ -146,94 +135,113 @@ export const Auth: React.FC = () => {
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold">Legendary Food</CardTitle>
             <CardDescription>
-              {!codeSent 
-                ? 'Insira seu email para receber o código de acesso'
-                : 'Digite o código enviado para seu email'}
+              Entre ou crie sua conta para continuar
             </CardDescription>
           </CardHeader>
           
           <CardContent>
-            {!codeSent ? (
-              <form onSubmit={handleSendCode} className="space-y-4">
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={loading}
-                    autoFocus
-                  />
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Enviando código...' : 'Enviar código'}
-                </Button>
-              </form>
-            ) : (
-              <form onSubmit={handleVerifyCode} className="space-y-6">
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-                
-                <div className="space-y-2">
-                  <Label htmlFor="code" className="text-center block">
-                    Código de verificação
-                  </Label>
-                  <div className="flex justify-center">
-                    <InputOTP
-                      maxLength={6}
-                      value={code}
-                      onChange={(value) => setCode(value)}
-                      disabled={loading}
-                    >
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                        <InputOTPSlot index={3} />
-                        <InputOTPSlot index={4} />
-                        <InputOTPSlot index={5} />
-                      </InputOTPGroup>
-                    </InputOTP>
-                  </div>
-                  <p className="text-sm text-muted-foreground text-center mt-2">
-                    Código enviado para: <span className="font-medium">{email}</span>
-                  </p>
-                </div>
-                
-                <div className="space-y-3">
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={loading || code.length !== 6}
-                  >
-                    {loading ? 'Verificando...' : 'Verificar código'}
-                  </Button>
+            <Tabs defaultValue="login" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">Login</TabsTrigger>
+                <TabsTrigger value="signup">Cadastro</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="login">
+                <form onSubmit={handleSignIn} className="space-y-4">
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
                   
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleResendCode}
-                    disabled={loading}
-                  >
-                    Solicitar novo código
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input
+                      id="login-email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={loading}
+                      autoFocus
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">Senha</Label>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                  
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Entrando...' : 'Entrar'}
                   </Button>
-                </div>
-              </form>
-            )}
+                </form>
+              </TabsContent>
+              
+              <TabsContent value="signup">
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">Nome</Label>
+                    <Input
+                      id="signup-name"
+                      type="text"
+                      placeholder="Seu nome completo"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                      disabled={loading}
+                      autoFocus
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Senha</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      placeholder="Mínimo 6 caracteres"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                      minLength={6}
+                    />
+                  </div>
+                  
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Criando conta...' : 'Criar conta'}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
